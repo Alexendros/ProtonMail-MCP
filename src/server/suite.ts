@@ -115,7 +115,8 @@ export function registerSuiteTool(
                 calendar: cfg.products.calendar.enabled
                   ? {
                       available: false,
-                      reason: 'CalDAV not yet exposed by Bridge',
+                      reason:
+                        'Proton Calendar uses E2E-encrypted sync, not standard CalDAV. No third-party client can connect to Proton Calendar directly.',
                     }
                   : { available: false },
                 drive: cfg.products.drive.enabled && driveClient

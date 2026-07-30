@@ -1,12 +1,14 @@
 /**
  * Calendar tools — STUB implementation.
  *
- * Proton Bridge does not currently expose CalDAV endpoints. Once Bridge
- * supports calendar, this module should be replaced with a real CalDAV
- * client using `tsdav` or similar (see spec specs/bridge-mcp/).
+ * Proton Calendar uses an E2E-encrypted proprietary sync protocol, NOT
+ * standard CalDAV. No third-party client (including this one) can
+ * connect to Proton Calendar directly.
  *
- * For now, three tools are registered so MCP clients can discover them:
- * they always return `{ available: false }` with an explanatory message.
+ * Future: a non-Proton CalDAV backend (Nextcloud/iCloud/Fastmail) routed
+ * via tsdav could be added. For now, three tools are registered so MCP
+ * clients can discover them: they always return `{ available: false }`
+ * with an explanatory message.
  */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { createLogger } from '../config.js'
@@ -19,11 +21,14 @@ export function registerCalendarTools(
 ) {
   if (!deps.enabled) return
 
-  deps.log.warn('Calendar tools are stubs — CalDAV not yet exposed by Proton Bridge.')
+  deps.log.warn(
+    'Calendar tools are stubs — Proton Calendar uses E2E-encrypted sync, not standard CalDAV.',
+  )
 
   const unavailable = JSON.stringify({
     available: false,
-    reason: 'Calendar CalDAV not yet exposed by Proton Bridge.',
+    reason:
+      'Proton Calendar uses E2E-encrypted sync, not standard CalDAV. No third-party client can connect to Proton Calendar directly.',
   })
 
   for (const t of [
@@ -35,7 +40,7 @@ export function registerCalendarTools(
       t,
       {
         title: t,
-        description: `[STUB] ${t}`,
+        description: `[STUB] ${t} — Proton Calendar does not expose standard CalDAV.`,
         inputSchema: {},
         annotations: { readOnlyHint: true, openWorldHint: true },
       },
