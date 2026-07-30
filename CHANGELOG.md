@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- **Test Coverage (Auditoría histórica):** Crecimiento medible consolidado en tracked artifacts del repo. Evolución verificada:
+  - `90.65%` (Pre-PR #68) → `94.65%` (PR #69)
+  - `96.67%` (Branch Hunt 0, endurecimiento ESLint)
+  - `97.81%` → `97.91%` (Registros pre-v0.8.0 en `gh-pages`)
+  - `98.05%` (Actual local post-Batch B+D+dep pruning: 899 tests en 43 archivos)
+
+  > *Nota: El valor intermedio `97.62%` previo al ff-pull de `fix/seguridad-fase-1` se documenta como una medición local efímera, no materializada en artefactos tracked.*
 
 ### Fixed
 
