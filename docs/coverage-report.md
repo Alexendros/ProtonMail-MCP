@@ -1,18 +1,20 @@
 # Coverage Report
 
-**Generado:** 2026-07-20 — vitest + @vitest/coverage-v8 (post-PR #81, commit `9e8b798`)
+**Generado:** 2026-07-30 — vitest + @vitest/coverage-v8 (post commits `6851bd4` housekeeping + `1414805` README sync; cierra drift con `README.md` badge y `origin/gh-pages` `coverage-badge.json`).
 
-> El gate al 95% (lines | branches | statements) instalado en `vitest.config.ts` **PASA** — todas las métricas globales cumplen.
+> El gate al 95% (lines | branches | statements) instalado en `vitest.config.ts` **PASA** — todas las métricas globales cumplen con margen saludable (+0.76pp sobre branches).
 
 ## Resumen global
 
 | Métrica | Valor | Gate | Estado | Δ vs reporte anterior |
 |---------|-------|------|--------|----------------------|
-| **Statements** | **97.95%** | ≥95% | ✅ | −0.12pp (fluctuación) |
-| **Branches** | **95.30%** | ≥95% | ✅ **PASA** | **+1.67pp** |
+| **Statements** | **98.05%** | ≥95% | ✅ | **+0.10pp** |
+| **Branches** | **95.76%** | ≥95% | ✅ **PASA** | **+0.46pp** |
 | **Functions** | **97.37%** | (ungated) | ✅ | — |
-| **Lines** | **97.95%** | ≥95% | ✅ | −0.12pp (fluctuación) |
-| **Tests** | **876 / 43 files** | — | +12 desde último reporte | +1 file |
+| **Lines** | **98.05%** | ≥95% | ✅ | **+0.10pp** |
+| **Tests** | **899 / 43 files** | — | +23 desde último reporte | 0 files |
+
+> Cierre de drift: el badge en `README.md` (98.05%), el de `origin/gh-pages` `coverage-badge.json` (98.05% post último `coverage-badge.yml` run), y esta medición local coinciden exactamente. La rama `fix/seguridad-fase-1` referenciaba `97.62%` localmente como medición efímera pero no quedó en tracked artifacts.
 
 ## Branch Hunt 1 — cierre de 3 gaps en PR #81 (commit `9e8b798`)
 
@@ -183,12 +185,14 @@ Gate pasa (95.30%), pero sin margen real (+0.30pp). 12 módulos tienen branches 
 | Jul 2026 (Ronda 1-8 histórica) | 92.23% | — | ❌ |
 | Jul 2026 (Branch Hunt 1 pre) | 93.63% | +1.40pp | ❌ |
 | **Jul 2026 (Branch Hunt 1 post, PR #81)** | **95.30%** | **+1.67pp** | **✅ PASA** |
+| **Jul 2026 (Coverage sync, commits `6851bd4`+`1414805`)** | **95.76%** | **+0.46pp** | **✅ PASA +0.76pp margen** |
 | Jul 2026 (Branch Hunt 2 target) | 96.89% | +1.59pp | ✅ +4.89pp margen |
 
 ## Progreso histórico
 
 | Fecha | Statements | Branches | Tests | Files | Hitos |
 |-------|-----------|----------|-------|-------|-------|
+| **Jul 2026 (Coverage sync, 6 commits)** | **98.05%** | **95.76%** | **899** | **43** | **`6851bd4`+`1414805`: Batch B (Calendar stub Proton reality, `37a48be`), Batch D (bridge digest verify, `d5721d2`), deps prune semrel/{exec,git} (`3ad1d7b`), CHANGELOG retroactivo (`5b3dabe`), README badge sync (`1414805`), housekeeping (`6851bd4`); +23 tests; gate PASA +0.76pp margen sobre branches.** |
 | **Jul 2026 (Branch Hunt 1)** | **97.95%** | **95.30%** | **876** | **43** | **PR #81: bug fix discovery (88.23%), tests executor (87.5%), tests drive (90.62%); +12 tests; gate PASA** |
 | Jul 2026 (ESLint endurecimiento) | 98.00% | 92.23% | 819 | 42 | ESLint reglas off→warn, config.ts 90→100%, bridge-client 88→95% |
 | Jul 2026 (post-http.ts gap) | 96.67% | 91.04% | 804 | 42 | http.ts 99→100%, smtp.ts 98→100%, coverage badge bugfix |
