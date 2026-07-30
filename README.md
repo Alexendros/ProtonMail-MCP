@@ -165,7 +165,7 @@ Ver [`scripts/install.sh`](./scripts/install.sh) para la instalación interactiv
 ```bash
 npm run typecheck   # TypeScript strict
 npm test            # 745 tests (Vitest)
-npm run coverage    # Coverage (v8 — 97.62% statements)
+npm run coverage    # Coverage (v8 — 98.05% statements)
 npm run build       # Compilación
 npm run smoke       # Verificación stdio
 npm run knip        # Unused deps/exports
