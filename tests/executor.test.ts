@@ -13,9 +13,10 @@
  * vi.hoisted(), que se ejecuta ANTES que los factories de vi.mock.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { runAgent } from '../src/agent/executor.js'
 import { buildOrganizationPlan, applyOrganizationPlan } from '../src/agent/organizer.js'
 import { runSetup, runImapCheck } from '../src/agent/setup.js'
-import type { Config } from '../src/config.js'
+import { loadConfig, type Config } from '../src/config.js'
 
 // ---------------------------------------------------------------------------
 // Objetos compartidos — inicializados con vi.hoisted() para que estén
@@ -139,12 +140,6 @@ vi.mock('../src/ecosystem/discovery.js', () => ({
 }))
 
 // ---------------------------------------------------------------------------
-// Imports — se resuelven después de los mocks
-// ---------------------------------------------------------------------------
-import { runAgent } from '../src/agent/executor.js'
-import { loadConfig } from '../src/config.js'
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -241,6 +236,7 @@ describe('runAgent · monitor', () => {
     await runAgent('monitor')
     expect(buildOrganizationPlan).toHaveBeenCalledTimes(1)
     expect(applyOrganizationPlan).not.toHaveBeenCalled()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.any<T>() returns Matcher typed as `any` by vitest internals; structurally compatible with objectContaining slot
     expect(mockLogFns.info).toHaveBeenCalledWith('monitor/alert plan', expect.objectContaining({ newFolders: expect.any(Array) }))
   })
 })
@@ -343,10 +339,12 @@ describe('runAgent · drive goals', () => {
 describe('runAgent · suite-status', () => {
   it('loguea estado de todos los productos', async () => {
     await runAgent('suite-status')
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment -- expect.any<T>() returns Matcher typed as `any` by vitest internals; structurally compatible with objectContaining slot */
     expect(mockLogFns.info).toHaveBeenCalledWith('suite status', expect.objectContaining({
       mail: expect.any(String), pass: expect.any(String),
       calendar: expect.any(String), drive: expect.any(String),
     }))
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment */
   })
 })
 

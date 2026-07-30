@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { GoalContext, OrganizationPlan } from '../../src/agent/goals.js'
-import type { AlertSystem } from '../../src/alerts/index.js'
+import { buildOrganizationPlan, applyOrganizationPlan } from '../../src/agent/organizer.js'
 import type { EmailSummary, EmailFull } from '../../src/imap.js'
 
 // ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ const hoisted = vi.hoisted(() => {
   const mockListEmails = vi.fn()
   const mockGetEmail = vi.fn()
   const mockClose = vi.fn()
-  const mockCreateMailbox = vi.fn()
+  const mockCreateMailbox = vi.fn<() => Promise<{ path: string; created: boolean }>>()
   const mockCopyEmail = vi.fn()
   const mockMoveEmail = vi.fn()
 
@@ -45,13 +45,20 @@ const hoisted = vi.hoisted(() => {
 
   const mockAlertsEmit = vi.fn()
   const mockAlertsInfo = vi.fn()
-  const mockAlertSystem = {
+  interface MockAlertSystem {
+    emit: ReturnType<typeof vi.fn>
+    info: ReturnType<typeof vi.fn>
+    warning: ReturnType<typeof vi.fn>
+    alert: ReturnType<typeof vi.fn>
+    critical: ReturnType<typeof vi.fn>
+  }
+  const mockAlertSystem: MockAlertSystem = {
     emit: mockAlertsEmit,
     info: mockAlertsInfo,
     warning: vi.fn(),
     alert: vi.fn(),
     critical: vi.fn(),
-  } as unknown as AlertSystem
+  }
 
   const silentLog = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() }
 
@@ -80,8 +87,6 @@ vi.mock('../../src/alerts/index.js', () => ({
 // Module under test
 // ---------------------------------------------------------------------------
 
-import { buildOrganizationPlan, applyOrganizationPlan } from '../../src/agent/organizer.js'
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -99,12 +104,12 @@ const defaultCtx: GoalContext = {
 }
 
 function makeSummary(uid: number, overrides?: Partial<EmailSummary>): EmailSummary {
-  return { uid, seq: uid, messageId: `msg-${uid}`, from: 'sender@test.com', to: ['me@test.com'], subject: `Subject ${uid}`, date: '2026-07-18T10:00:00Z', flags: [], size: 1000, ...overrides }
+  return { uid, seq: uid, messageId: `msg-${String(uid)}`, from: 'sender@test.com', to: ['me@test.com'], subject: `Subject ${String(uid)}`, date: '2026-07-18T10:00:00Z', flags: [], size: 1000, ...overrides }
 }
 
 function makeFullEmail(uid: number, overrides?: Partial<EmailFull>): EmailFull {
   return {
-    uid, seq: uid, messageId: `msg-${uid}`, from: 'sender@test.com', to: ['me@test.com'], subject: `Subject ${uid}`, date: '2026-07-18T10:00:00Z', flags: [], size: 1000,
+    uid, seq: uid, messageId: `msg-${String(uid)}`, from: 'sender@test.com', to: ['me@test.com'], subject: `Subject ${String(uid)}`, date: '2026-07-18T10:00:00Z', flags: [], size: 1000,
     cc: [], bcc: [], replyTo: [], textBody: 'Body text', htmlBody: undefined, attachments: [], headers: {},
     ...overrides,
   }
@@ -491,6 +496,7 @@ describe('buildOrganizationPlan — branch gap coverage', () => {
     // Error loggeado
     expect(hoisted.silentLog.error).toHaveBeenCalledWith(
       'Error inferring state labels',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.stringContaining() returns Matcher typed as `any` by vitest internals; structural compatibility with objectContaining slot is sound
       expect.objectContaining({ uid: 1, error: expect.stringContaining('state inference failed') }),
     )
   })
