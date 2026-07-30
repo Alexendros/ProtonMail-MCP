@@ -10,7 +10,7 @@
  * Mock: ImapClient class via vi.mock, alerts functions, resolveBridgeConfig.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { GoalContext, OrganizationPlan } from '../../src/agent/types.js'
+import type { GoalContext, OrganizationPlan } from '../../src/agent/goals.js'
 import type { AlertSystem } from '../../src/alerts/index.js'
 import type { EmailSummary, EmailFull } from '../../src/imap.js'
 
@@ -235,7 +235,7 @@ describe('buildOrganizationPlan', () => {
     hoisted.mockListEmails.mockResolvedValue({
       items: [{ seq: 1 }, { uid: 2 }], // first has no uid
       total: 2,
-    } as never)
+    })
     hoisted.mockGetEmail.mockResolvedValueOnce(makeFullEmail(2))
 
     await buildOrganizationPlan(defaultCfg, defaultCtx, hoisted.silentLog, hoisted.mockAlertSystem)

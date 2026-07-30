@@ -8,6 +8,8 @@ dist/
 logs/
 .DS_Store
 .commandcode/
+.freebuff/
+desktop.db*
 
 # Lockfiles — pnpm-lock.yaml is canonical
 package-lock.json

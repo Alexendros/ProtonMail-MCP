@@ -13,7 +13,8 @@
  * vi.hoisted(), que se ejecuta ANTES que los factories de vi.mock.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import type { SetupReport } from '../src/agent/types.js'
+import { buildOrganizationPlan, applyOrganizationPlan } from '../src/agent/organizer.js'
+import { runSetup, runImapCheck } from '../src/agent/setup.js'
 import type { Config } from '../src/config.js'
 
 // ---------------------------------------------------------------------------
@@ -52,12 +53,12 @@ const { defaultConfig, mockLogFns, mockAlertFns, mockSetupReport, mockFailReport
       bridgeReachable: true, imapOk: true, smtpOk: true, authOk: true,
       folders: ['INBOX', 'Trash', 'Folders/Pagos'],
       recommendations: [],
-    } as SetupReport,
+    },
     mockFailReport: {
       bridgeReachable: false, imapOk: false, smtpOk: false, authOk: false,
       folders: [],
       recommendations: ['Bridge no est\u00e1 escuchando IMAP'],
-    } as SetupReport,
+    },
     mockPlan: {
       newFolders: ['Folders/Admin'],
       folderProposals: [{ path: 'Folders/Admin', reason: 'Admin emails', emails: [42], suggestedLabels: [] }],
@@ -142,8 +143,6 @@ vi.mock('../src/ecosystem/discovery.js', () => ({
 // ---------------------------------------------------------------------------
 import { runAgent } from '../src/agent/executor.js'
 import { loadConfig } from '../src/config.js'
-import { runSetup, runImapCheck } from '../src/agent/setup.js'
-import { buildOrganizationPlan, applyOrganizationPlan } from '../src/agent/organizer.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
