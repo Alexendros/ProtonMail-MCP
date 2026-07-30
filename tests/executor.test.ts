@@ -22,7 +22,7 @@ import { loadConfig, type Config } from '../src/config.js'
 // Objetos compartidos — inicializados con vi.hoisted() para que estén
 // disponibles cuando los factories de vi.mock se ejecuten.
 // ---------------------------------------------------------------------------
-const { defaultConfig, mockLogFns, mockAlertFns, mockSetupReport, mockFailReport, mockPlan } = vi.hoisted(() => {
+const { defaultConfig, mockLogFns, mockAlertFns, setupReportMock, failReportMock, planMock } = vi.hoisted(() => {
   const defaultConfig: Config = {
     products: {
       mail: {
@@ -50,17 +50,17 @@ const { defaultConfig, mockLogFns, mockAlertFns, mockSetupReport, mockFailReport
       emit: vi.fn(), info: vi.fn(), warning: vi.fn(),
       alert: vi.fn(), critical: vi.fn(), audit: vi.fn(),
     },
-    mockSetupReport: {
+    setupReportMock: {
       bridgeReachable: true, imapOk: true, smtpOk: true, authOk: true,
       folders: ['INBOX', 'Trash', 'Folders/Pagos'],
       recommendations: [],
     },
-    mockFailReport: {
+    failReportMock: {
       bridgeReachable: false, imapOk: false, smtpOk: false, authOk: false,
       folders: [],
       recommendations: ['Bridge no est\u00e1 escuchando IMAP'],
     },
-    mockPlan: {
+    planMock: {
       newFolders: ['Folders/Admin'],
       folderProposals: [{ path: 'Folders/Admin', reason: 'Admin emails', emails: [42], suggestedLabels: [] }],
       labelProposals: [{ name: 'Labels/Por resolver', reason: 'Action needed', emails: [42] }],
@@ -114,12 +114,12 @@ vi.mock('../src/alerts/index.js', () => ({
 }))
 
 vi.mock('../src/agent/setup.js', () => ({
-  runSetup: vi.fn().mockResolvedValue(mockSetupReport),
-  runImapCheck: vi.fn().mockResolvedValue(mockSetupReport),
+  runSetup: vi.fn().mockResolvedValue(setupReportMock),
+  runImapCheck: vi.fn().mockResolvedValue(setupReportMock),
 }))
 
 vi.mock('../src/agent/organizer.js', () => ({
-  buildOrganizationPlan: vi.fn().mockResolvedValue(mockPlan),
+  buildOrganizationPlan: vi.fn().mockResolvedValue(planMock),
   applyOrganizationPlan: vi.fn().mockResolvedValue(undefined),
 }))
 
@@ -161,9 +161,9 @@ function withDryRun(dryRun: boolean): Config {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(loadConfig).mockReturnValue(defaultConfig)
-  vi.mocked(runSetup).mockResolvedValue(mockSetupReport)
-  vi.mocked(runImapCheck).mockResolvedValue(mockSetupReport)
-  vi.mocked(buildOrganizationPlan).mockResolvedValue(mockPlan)
+  vi.mocked(runSetup).mockResolvedValue(setupReportMock)
+  vi.mocked(runImapCheck).mockResolvedValue(setupReportMock)
+  vi.mocked(buildOrganizationPlan).mockResolvedValue(planMock)
   vi.mocked(applyOrganizationPlan).mockResolvedValue(undefined)
   mockDriveClientFns.listFiles.mockResolvedValue({ ok: true, files: [{ name: 'doc.md' }] })
   mockDriveClientFns.download.mockResolvedValue({ ok: true, localPath: '/tmp/staging/download' })
@@ -178,7 +178,7 @@ describe('runAgent · discover', () => {
   it('llama a runSetup y loguea el reporte', async () => {
     await runAgent('discover')
     expect(runSetup).toHaveBeenCalledTimes(1)
-    expect(mockLogFns.info).toHaveBeenCalledWith('discover report', { report: mockSetupReport })
+    expect(mockLogFns.info).toHaveBeenCalledWith('discover report', { report: setupReportMock })
   })
 })
 
@@ -190,7 +190,7 @@ describe('runAgent · setup', () => {
   })
 
   it('exit(2) cuando IMAP o SMTP fallan', async () => {
-    vi.mocked(runSetup).mockResolvedValue(mockFailReport)
+    vi.mocked(runSetup).mockResolvedValue(failReportMock)
     const spy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
     await runAgent('setup')
     expect(spy).toHaveBeenCalledWith(2)
@@ -207,7 +207,7 @@ describe('runAgent · check-imap', () => {
   })
 
   it('exit(2) si IMAP no disponible', async () => {
-    vi.mocked(runImapCheck).mockResolvedValue({ ...mockFailReport, imapOk: false })
+    vi.mocked(runImapCheck).mockResolvedValue({ ...failReportMock, imapOk: false })
     const spy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
     await runAgent('check-imap')
     expect(spy).toHaveBeenCalledWith(2)
