@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Madrid",
+  "labels": ["dependencies"],
+  "schedule": ["before 10am on monday"],
+  "rangeStrategy": "bump",
+  "dependencyDashboard": true,
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 10am on monday"] },
+  "packageRules": [
+    {"matchDepTypes":["devDependencies"],"matchUpdateTypes":["minor","patch"],"groupName":"dev deps (non-major)","automerge":true},
+    {"matchDepTypes":["dependencies"],"matchUpdateTypes":["minor","patch"],"groupName":"prod deps (non-major)","automerge":false},
+    {"matchUpdateTypes":["major"],"groupName":"major updates","automerge":false},
+    {"matchPackageNames":["@modelcontextprotocol/sdk"],"groupName":"MCP SDK","automerge":false}
+  ],
+  "platformAutomerge": true
+}
