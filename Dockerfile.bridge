@@ -7,7 +7,9 @@
 #
 # El tag `:build` se reconstruye con más frecuencia que `:latest` e incluye
 # Bridge binarios más actualizados; preferido sobre `latest`.
-# Digest multi-arquitectura (amd64/arm64/arm/riscv64) actualizado 2025-04-02.
+# Digest multi-arquitectura (amd64/arm64/arm/riscv64) verificado upstream
+# 2026-07-30 — pin actual sigue siendo el canónico (docker pull confirma que
+# 514d19e... sigue en RepoDigests; nueva publicacion 2ab51a0... coexist).
 FROM shenxn/protonmail-bridge:build@sha256:514d19e289e039fb22e0a8196faaf4e84e4a1805de359ef8fa704785bb5783a1
 
 USER root
