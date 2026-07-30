@@ -1,0 +1,53 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/index.ts",
+    "src/agent-cli.ts",
+    "src/server.ts",
+    "src/config.ts",
+    "src/agent/index.ts",
+    "src/agent/goals.ts",
+    "src/bridge/bridge-client.ts"
+  ],
+  "project": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    ".releaserc.json"
+  ],
+  "ignore": [
+    ".freebuff/**",
+    ".github/**",
+    "docs/**",
+    "playbooks/**",
+    "scripts/**",
+    "eslint.config.mjs",
+    "commitlint.config.mjs",
+    "vitest.config.ts",
+    "vitest.e2e.config.ts",
+    "vitest.integration.config.ts",
+    ".lycheeignore"
+  ],
+  "ignoreDependencies": [
+    "@types/*",
+    "@vitest/coverage-v8",
+    "@eslint/js",
+    "eslint",
+    "typescript-eslint",
+    "eslint-plugin-import-x",
+    "eslint-plugin-security",
+    "eslint-plugin-unicorn",
+    "@commitlint/cli",
+    "@commitlint/config-conventional",
+    "husky",
+    "lint-staged",
+    "knip",
+    "license-checker",
+    "supertest",
+    "semantic-release",
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/npm",
+    "@semantic-release/github"
+  ],
+  "ignoreExportsUsedInFile": true
+}
