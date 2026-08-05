@@ -113,6 +113,8 @@ jobs:
           echo "::error::GreenMail no respondió en :3143 tras 120s. Verifica que Docker service containers están habilitados en el runner."
           docker ps 2>/dev/null || echo "::warning::Docker not available on runner"
           exit 1
+      - name: Install pass + gnupg (needed by pass.e2e.ts)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pass gnupg
       - name: E2E full cycle (send → read → flag → move → delete)
         env:
           GREENMAIL_HOST: 127.0.0.1
