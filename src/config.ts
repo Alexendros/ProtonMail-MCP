@@ -161,7 +161,7 @@ export async function resolveBridgeConfig(
 // ---------------------------------------------------------------------------
 
 function readInt(value: string | undefined, defaultValue: number): number {
-  return Number(value ?? defaultValue)
+  return value !== undefined && value !== '' ? Number(value) : defaultValue
 }
 
 function readBool(value: string | undefined, defaultValue: boolean): boolean {

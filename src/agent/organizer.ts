@@ -34,7 +34,8 @@ export async function buildOrganizationPlan(
     const classified: ClassifiedEmail[] = [];
 
     for (const summary of summaries) {
-      if (!summary.uid) continue;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: IMAP runtime may return undefined UIDs
+      if (summary.uid == null) continue;
       try {
         const full = await imap.getEmail("INBOX", summary.uid);
         if (!full) continue;
