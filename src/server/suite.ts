@@ -115,8 +115,7 @@ export function registerSuiteTool(
                 calendar: cfg.products.calendar.enabled
                   ? {
                       available: false,
-                      reason:
-                        'Proton Calendar uses E2E-encrypted sync, not standard CalDAV. No third-party client can connect to Proton Calendar directly.',
+                      reason: 'Proton Calendar uses E2E-encrypted sync; no third-party CalDAV access.',
                     }
                   : { available: false },
                 drive: cfg.products.drive.enabled && driveClient

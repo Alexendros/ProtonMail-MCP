@@ -496,7 +496,7 @@ describe('buildOrganizationPlan — branch gap coverage', () => {
     // Error loggeado
     expect(hoisted.silentLog.error).toHaveBeenCalledWith(
       'Error inferring state labels',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.stringContaining() returns Matcher typed as `any` by vitest internals; structural compatibility with objectContaining slot is sound
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest Matcher<any> in objectContaining slot
       expect.objectContaining({ uid: 1, error: expect.stringContaining('state inference failed') }),
     )
   })
@@ -534,5 +534,23 @@ describe('applyOrganizationPlan — branch gap coverage', () => {
 
     await expect(applyOrganizationPlan(defaultCfg, plan, hoisted.silentLog)).rejects.toThrow('Permission denied')
     expect(hoisted.mockCreateMailbox).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips suggestedLabels when no emails were moved (moved=0)', async () => {
+    const plan: OrganizationPlan = {
+      newFolders: [],
+      folderProposals: [
+        { path: 'Folders/Fallas', reason: 'all failed', emails: [1, 2], suggestedLabels: ['Labels/Skip'] },
+      ],
+      labelProposals: [],
+      alerts: [],
+    }
+    hoisted.mockMoveEmail.mockResolvedValue(false)
+
+    await applyOrganizationPlan(defaultCfg, plan, hoisted.silentLog)
+
+    expect(hoisted.mockMoveEmail).toHaveBeenCalledTimes(2)
+    expect(hoisted.mockListEmails).not.toHaveBeenCalled()
+    expect(hoisted.mockCopyEmail).not.toHaveBeenCalled()
   })
 })

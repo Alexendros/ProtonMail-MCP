@@ -1,14 +1,6 @@
 /**
- * Calendar tools — STUB implementation.
- *
- * Proton Calendar uses an E2E-encrypted proprietary sync protocol, NOT
- * standard CalDAV. No third-party client (including this one) can
- * connect to Proton Calendar directly.
- *
- * Future: a non-Proton CalDAV backend (Nextcloud/iCloud/Fastmail) routed
- * via tsdav could be added. For now, three tools are registered so MCP
- * clients can discover them: they always return `{ available: false }`
- * with an explanatory message.
+ * Calendar tools — STUB. Proton Calendar uses E2E-encrypted sync;
+ * no third-party CalDAV access is possible.
  */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { createLogger } from '../config.js'
@@ -21,14 +13,11 @@ export function registerCalendarTools(
 ) {
   if (!deps.enabled) return
 
-  deps.log.warn(
-    'Calendar tools are stubs — Proton Calendar uses E2E-encrypted sync, not standard CalDAV.',
-  )
+  deps.log.warn('Calendar tools are stubs — Proton Calendar uses E2E-encrypted sync, not CalDAV.')
 
   const unavailable = JSON.stringify({
     available: false,
-    reason:
-      'Proton Calendar uses E2E-encrypted sync, not standard CalDAV. No third-party client can connect to Proton Calendar directly.',
+    reason: 'Proton Calendar uses E2E-encrypted sync; no third-party CalDAV access.',
   })
 
   for (const t of [
@@ -40,7 +29,7 @@ export function registerCalendarTools(
       t,
       {
         title: t,
-        description: `[STUB] ${t} — Proton Calendar does not expose standard CalDAV.`,
+        description: `[STUB] ${t} — E2E-encrypted sync, no CalDAV.`,
         inputSchema: {},
         annotations: { readOnlyHint: true, openWorldHint: true },
       },
