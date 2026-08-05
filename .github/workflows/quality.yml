@@ -85,7 +85,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   knip:
     name: Knip (unused deps/exports/files)
-    runs-on: [self-hosted, ts]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
