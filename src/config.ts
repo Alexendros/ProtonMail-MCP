@@ -165,7 +165,7 @@ function readInt(value: string | undefined, defaultValue: number): number {
 }
 
 function readBool(value: string | undefined, defaultValue: boolean): boolean {
-  return (value ?? String(defaultValue)) === 'true'
+  return value !== undefined && value !== '' ? value === 'true' : defaultValue
 }
 
 function readCsv(value: string | undefined): string[] {
