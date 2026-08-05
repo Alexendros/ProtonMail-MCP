@@ -5,6 +5,16 @@ import { resolveBridgeConfig } from "../config.js";
 import { ImapClient, type EmailSummary } from "../imap.js";
 import type { OrganizationPlan, GoalContext } from "./goals.js";
 
+/** Maps EmailFull fields to the { from?, subject?, text?, html? } shape expected by alert rules. */
+function emailFeatures(full: { from?: string | undefined; subject?: string | undefined; textBody?: string | undefined; htmlBody?: string | undefined }) {
+  const f: { from?: string; subject?: string; text?: string; html?: string } = {}
+  if (full.from !== undefined) f.from = full.from
+  if (full.subject !== undefined) f.subject = full.subject
+  if (full.textBody !== undefined) f.text = full.textBody
+  if (full.htmlBody !== undefined) f.html = full.htmlBody
+  return f
+}
+
 interface ClassifiedEmail {
   uid: number;
   summary: EmailSummary;
@@ -34,23 +44,15 @@ export async function buildOrganizationPlan(
     const classified: ClassifiedEmail[] = [];
 
     for (const summary of summaries) {
-      if (!summary.uid) continue;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: IMAP runtime may return undefined UIDs
+      if (summary.uid == null) continue;
       try {
         const full = await imap.getEmail("INBOX", summary.uid);
         if (!full) continue;
-        const classification = classifyEmail({
-          ...(full.from !== undefined ? { from: full.from } : {}),
-          ...(full.subject !== undefined ? { subject: full.subject } : {}),
-          ...(full.textBody !== undefined ? { text: full.textBody } : {}),
-          ...(full.htmlBody !== undefined ? { html: full.htmlBody } : {}),
-        });
-        const threats = detectThreats({
-          ...(full.from !== undefined ? { from: full.from } : {}),
-          ...(full.subject !== undefined ? { subject: full.subject } : {}),
-          ...(full.textBody !== undefined ? { text: full.textBody } : {}),
-          ...(full.htmlBody !== undefined ? { html: full.htmlBody } : {}),
-        });
-        classified.push({ uid: summary.uid, summary, full, classification, threats });
+        const features = emailFeatures(full)
+        const classification = classifyEmail(features)
+        const threats = detectThreats(features)
+        classified.push({ uid: summary.uid, summary, full, classification, threats })
       } catch (err) {
         log.error("Error classifying email", { uid: summary.uid, error: String(err) });
       }
@@ -84,10 +86,7 @@ export async function buildOrganizationPlan(
       for (const e of emails) {
         try {
           const state = inferStateLabels({
-            ...(e.full?.from !== undefined ? { from: e.full.from } : {}),
-            ...(e.full?.subject !== undefined ? { subject: e.full.subject } : {}),
-            ...(e.full?.textBody !== undefined ? { text: e.full.textBody } : {}),
-            ...(e.full?.htmlBody !== undefined ? { html: e.full.htmlBody } : {}),
+            ...emailFeatures(e.full ?? {}),
             category: e.classification.category,
           });
           for (const label of state.labels) {
