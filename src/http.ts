@@ -27,6 +27,13 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { compareTokens, extractBearer } from "./auth.js";
 import type { Config } from "./config.js";
+import {
+  registry as metricsRegistry,
+  mcpRequestsTotal,
+  mcpRequestDuration,
+  mcpActiveSessions,
+  mcpDryRunMode,
+} from "./utils/metrics.js";
 import { VERSION } from "./version.js";
 
 interface Logger {
@@ -97,6 +104,24 @@ export function buildHttpApp(deps: HttpAppDeps): Express {
     next();
   });
 
+  // Gauge de dry-run (valor constante por sesión de vida del proceso).
+  mcpDryRunMode.set({}, cfg.agent.dryRun ? 1 : 0);
+
+  // Instrumentación Prometheus para requests MCP.
+  // Captura method (del JSON-RPC body), status HTTP y duración.
+  app.use("/mcp", (req: Request, res: Response, next: NextFunction): void => {
+    const start = process.hrtime.bigint();
+    const bodyObj = (req.body && typeof req.body === "object") ? req.body as Record<string, unknown> : null;
+    const rpcMethod = (bodyObj && typeof bodyObj["method"] === "string") ? bodyObj["method"] : "unknown";
+    res.on("finish", () => {
+      const durationSeconds = Number(process.hrtime.bigint() - start) / 1e9;
+      const status = String(res.statusCode);
+      mcpRequestsTotal.inc({ transport: "http", method: rpcMethod, status });
+      mcpRequestDuration.observe({ transport: "http", method: rpcMethod }, durationSeconds);
+    });
+    next();
+  });
+
   // Orden importa: rate-limit ANTES de auth. Así un atacante que bombardee
   // con tokens inválidos también consume su cuota y deja de ser útil.
   app.use("/mcp", limiter, authMiddleware);
@@ -153,6 +178,12 @@ export function buildHttpApp(deps: HttpAppDeps): Express {
   // barata para detectar fugas o cargas anómalas.
   app.get("/healthz", (_req: Request, res: Response) => {
     res.json({ ok: true, version: VERSION, sessions: sessions.size });
+  });
+
+  // `/metrics` requiere bearer auth (no exposición pública de métricas).
+  app.get("/metrics", authMiddleware, (_req: Request, res: Response) => {
+    mcpActiveSessions.set({}, sessions.size);
+    res.type("text/plain; version=0.0.4").send(metricsRegistry.text());
   });
 
   // Eviction de sesiones idle. `setInterval().unref()` permite al proceso

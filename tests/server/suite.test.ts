@@ -135,6 +135,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg,
       log: silentLog,
       imap,
@@ -174,6 +175,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg,
       log: silentLog,
       imap,
@@ -208,6 +210,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap, driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -227,6 +230,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: { health: hoisted.mockPassHealth },
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -252,6 +256,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap, driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -275,6 +280,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: { health: hoisted.mockPassHealth },
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -293,6 +299,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: { health: hoisted.mockPassHealth },
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -310,6 +317,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: { health: hoisted.mockPassHealth },
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -330,6 +338,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -345,6 +354,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -365,6 +375,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -383,6 +394,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -398,6 +410,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -414,6 +427,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -449,6 +463,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: { health: hoisted.mockPassHealth },
       cfg, log: silentLog, imap, driveClient, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 
@@ -481,6 +496,7 @@ describe('registerSuiteTool · proton_suite_status', () => {
     const { server, invoke } = captureHandler()
 
     registerSuiteTool(server, {
+      passClient: undefined,
       cfg, log: silentLog, imap: makeImap(), driveClient: undefined, passwordResolver, bridgeCfg: defaultBridgeCfg,
     })
 

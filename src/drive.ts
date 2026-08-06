@@ -11,8 +11,10 @@
  * El CLI persiste el token localmente (típicamente en ~/.config).
  */
 import { execFile, execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { DRIVE_EXEC_MAX_BUFFER } from './constants.js'
+import { countFiles } from './drive-utils.js'
 
 export interface DriveConfig {
   cliBin: string
@@ -86,7 +88,7 @@ export class DriveClient {
       execFile(
         this.opts.cliBin,
         args,
-        { maxBuffer: 50 * 1024 * 1024 },
+        { maxBuffer: DRIVE_EXEC_MAX_BUFFER },
         (err, stdout, stderr) => {
           if (err) {
             reject(
@@ -199,23 +201,7 @@ export class DriveClient {
     let stagingFiles: number | undefined
     let stagingBytes: number | undefined
     if (stagingExists) {
-      const totals = { files: 0, bytes: 0 }
-      const walk = (dir: string) => {
-        for (const entry of readdirSync(dir)) {
-          const full = resolve(dir, entry)
-          try {
-            const s = statSync(full)
-            if (s.isDirectory()) walk(full)
-            else {
-              totals.files++
-              totals.bytes += s.size
-            }
-          } catch {
-            /* skip */
-          }
-        }
-      }
-      walk(staging)
+      const totals = await countFiles(staging)
       stagingFiles = totals.files
       stagingBytes = totals.bytes
     }

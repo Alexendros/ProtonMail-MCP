@@ -25,8 +25,8 @@
         },
         {
           "name": "PROTON_BRIDGE_PASS",
-          "description": "Bridge-generated app password (NOT your Proton account password). Shown by `protonmail-bridge-core --cli` under `info`.",
-          "isRequired": true,
+          "description": "Bridge-generated app password (NOT your Proton account password). Shown by `protonmail-bridge-core --cli` under `info`. Optional if PROTON_PASS_ENABLED=true and PROTON_BRIDGE_PASS_PATH is set.",
+          "isRequired": false,
           "format": "string",
           "isSecret": true
         },

@@ -2,7 +2,12 @@
 
 Documento dedicado de arquitectura. El `README.md` da la visión orientada
 a uso; aquí se consolida el modelo interno, los flujos y las fronteras de
-seguridad. Las decisiones de fondo se registran en `docs/adr/`.
+seguridad. Las decisiones de fondo se registran como ADRs (MADR) en
+`docs/adr/` — ver especialmente:
+- ADR-002: transporte dual stdio + HTTP per-session (fail-closed auth/origin).
+- ADR-003: extracción de puertos/adaptadores (`src/clients/interfaces.ts`).
+- ADR-004: validación de config al arranque y dry-run por defecto.
+- ADR-005: Calendar CalDAV stub (bloqueado en Proton Bridge).
 
 ## 1. Propósito y encaje
 
@@ -79,7 +84,10 @@ Servidores Proton (cifrado E2E)
   JSON-RPC; contaminarlo rompería el protocolo. Ningún cuerpo de request ni
   credencial se registra.
 
-## 4. Las 14 tools
+## 4. Las tools
+
+> La lista completa, auto-generada y con los schemas JSON de cada tool, está en
+> [`docs/api/mcp-tools.md`](./docs/api/mcp-tools.md) (generada con `pnpm docs:generate`).
 
 Las tools de lectura aceptan `response_format: "markdown" | "json"`. Cada
 una se registra con `annotations` del SDK (`readOnlyHint`,

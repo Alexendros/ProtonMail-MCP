@@ -56,6 +56,15 @@ jobs:
       - name: Build
         run: pnpm run build
 
+      - name: Generate MCP tools reference
+        run: pnpm run docs:generate
+
+      - name: Verify docs/api/mcp-tools.md is in sync
+        run: pnpm run docs:check
+
+      - name: Contract tests (MCP tool surface — no GreenMail needed)
+        run: pnpm run test:contract
+
       - name: Smoke test (stdio initialize + tools/list)
         run: pnpm run smoke
 
@@ -73,8 +82,8 @@ jobs:
         with:
           version: latest
       - run: pnpm install --frozen-lockfile
-      - name: Critical vulnerabilities only
-        run: pnpm audit --audit-level=critical
+      - name: Critical/high vulnerabilities
+        run: pnpm audit --audit-level=high
 
   e2e:
     name: E2E (GreenMail · IMAP/SMTP reales)

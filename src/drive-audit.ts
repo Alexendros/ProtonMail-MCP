@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto'
-import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
-import { resolve, extname, relative, dirname } from 'node:path'
+import { existsSync } from 'node:fs'
+import { extname, relative, dirname } from 'node:path'
+import { hashFile, walkDir } from './drive-utils.js'
 
 export interface InventoryReport {
   totalFiles: number
@@ -51,39 +51,30 @@ export class DriveAuditor {
     },
   ) {}
 
-  hashFile(filePath: string): string {
-    const content = readFileSync(filePath)
-    return createHash('sha256').update(content).digest('hex')
-  }
-
-  scanInventory(stagingDir: string): InventoryReport {
+  async scanInventory(stagingDir: string): Promise<InventoryReport> {
     const files: InventoryReport['files'] = []
     let totalBytes = 0
 
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir)) {
-        const full = resolve(dir, entry)
-        try {
-          const s = statSync(full)
-          if (s.isDirectory()) walk(full)
-          else {
-            totalBytes += s.size
-            files.push({
-              name: entry,
-              path: relative(stagingDir, full),
-              ext: extname(entry).toLowerCase(),
-              size: s.size,
-              modified: s.mtime,
-            })
-          }
-        } catch (err) {
+    if (existsSync(stagingDir)) {
+      await walkDir(
+        stagingDir,
+        (entry, full, size, mtime) => {
+          totalBytes += size
+          files.push({
+            name: entry,
+            path: relative(stagingDir, full),
+            ext: extname(entry).toLowerCase(),
+            size,
+            modified: mtime,
+          })
+        },
+        (full, err) => {
           this.log.error(`drive-audit: skip ${full}`, {
             error: (err as Error).message,
           })
-        }
-      }
+        },
+      )
     }
-    if (existsSync(stagingDir)) walk(stagingDir)
 
     const byExt: Record<string, number> = {}
     const byDir: Record<string, number> = {}
@@ -96,37 +87,35 @@ export class DriveAuditor {
     return { totalFiles: files.length, totalBytes, byExt, byDir, files }
   }
 
-  findDuplicates(stagingDir: string): DuplicateEntry[] {
+  async findDuplicates(stagingDir: string): Promise<DuplicateEntry[]> {
     const hashMap = new Map<string, DuplicateEntry>()
-    const walk = (dir: string) => {
-      for (const entry of readdirSync(dir)) {
-        const full = resolve(dir, entry)
-        try {
-          const s = statSync(full)
-          if (s.isDirectory()) walk(full)
-          else if (s.size > 0) {
-            const hash = this.hashFile(full)
+    if (existsSync(stagingDir)) {
+      await walkDir(
+        stagingDir,
+        (entry, full, size) => {
+          if (size > 0) {
+            const hash = hashFile(full)
             let dup = hashMap.get(hash)
             if (!dup) {
-              dup = { hash, size: s.size, files: [] }
+              dup = { hash, size, files: [] }
               hashMap.set(hash, dup)
             }
             dup.files.push({ path: relative(stagingDir, full), name: entry })
           }
-        } catch (err) {
+        },
+        (full, err) => {
           this.log.error(`drive-audit: skip ${full}`, {
             error: (err as Error).message,
           })
-        }
-      }
+        },
+      )
     }
-    if (existsSync(stagingDir)) walk(stagingDir)
 
     return Array.from(hashMap.values()).filter((e) => e.files.length > 1)
   }
 
-  formatReport(stagingDir: string): FormatReport {
-    const inv = this.scanInventory(stagingDir)
+  async formatReport(stagingDir: string): Promise<FormatReport> {
+    const inv = await this.scanInventory(stagingDir)
     const obsoleteFiles = inv.files.filter((f) =>
       this.obsoleteExtensions.includes(f.ext),
     )
@@ -149,8 +138,8 @@ export class DriveAuditor {
     }
   }
 
-  buildOrganizePlan(stagingDir: string): OrganizePlan {
-    const inv = this.scanInventory(stagingDir)
+  async buildOrganizePlan(stagingDir: string): Promise<OrganizePlan> {
+    const inv = await this.scanInventory(stagingDir)
     const suggestions: OrganizeSuggestion[] = []
 
     const extDirs: Record<string, string> = {

@@ -576,3 +576,69 @@ describe("Catch block error handling", () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("Metrics endpoint", () => {
+  it("GET /metrics without bearer returns 401", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    const res = await request(app).get("/metrics");
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("unauthorized");
+  });
+
+  it("GET /metrics with valid bearer returns 200 and Prometheus text", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    const res = await request(app)
+      .get("/metrics")
+      .set("Authorization", "Bearer expected-token");
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/plain");
+    expect(res.text).toContain("# HELP mcp_requests_total");
+    expect(res.text).toContain("# TYPE mcp_requests_total counter");
+    expect(res.text).toContain("# TYPE mcp_request_duration_seconds histogram");
+    expect(res.text).toContain("# HELP mcp_active_sessions");
+    expect(res.text).toContain("# HELP mcp_dry_run_mode");
+  });
+
+  it("GET /metrics shows active_sessions after initialize", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    await request(app)
+      .post("/mcp")
+      .set("Authorization", "Bearer expected-token")
+      .set("Accept", "application/json, text/event-stream")
+      .send({
+        jsonrpc: "2.0", id: 1, method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t", version: "1" } },
+      });
+    const res = await request(app)
+      .get("/metrics")
+      .set("Authorization", "Bearer expected-token");
+    expect(res.text).toContain("mcp_active_sessions");
+    const match = res.text.match(/mcp_active_sessions\s+(\d+)/);
+    expect(match).not.toBeNull();
+    expect(Number(match![1])).toBeGreaterThanOrEqual(1);
+  });
+
+  it("metrics text includes request counts from instrumented /mcp calls", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    await request(app).post("/mcp").send({});
+    const res = await request(app)
+      .get("/metrics")
+      .set("Authorization", "Bearer expected-token");
+    expect(res.status).toBe(200);
+    expect(res.text).toMatch(/mcp_requests_total\{.*status="401".*\}\s+\d+/);
+  });
+
+  it("metrics endpoint requires origin check when allowlist is set", async () => {
+    const app = buildHttpApp({
+      buildServer: miniServer,
+      cfg: cfg({ allowedOrigins: ["https://trusted.com"] }),
+      log: silent,
+    });
+    const res = await request(app)
+      .get("/metrics")
+      .set("Authorization", "Bearer expected-token")
+      .set("Origin", "https://evil.com");
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe("origin_not_allowed");
+  });
+});
