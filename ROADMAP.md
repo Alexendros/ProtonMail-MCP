@@ -4,7 +4,7 @@ Plan a alto nivel. No son compromisos firmes; las prioridades pueden cambiar seg
 
 ## Estado actual
 
-`v0.8.0` — Architecture improvement: documentación, observabilidad, contract tests y CalDAV seam.
+`v1.2.1` — Architecture improvement: documentación, observabilidad, contract tests y CalDAV seam.
 
 ## Completado
 
@@ -30,7 +30,7 @@ Plan a alto nivel. No son compromisos firmes; las prioridades pueden cambiar seg
 - [x] CI: paso de lint en ci.yml, paso de knip en quality.yml, semantic-release en release.yml.
 - [x] Estandarización de scripts npm (`lint`, `lint:fix`, `knip`, `prepare`).
 
-### v0.8.0 — Architecture improvement (docs, observabilidad, contract tests, CalDAV seam)
+### v1.0.0 — Architecture improvement (docs, observabilidad, contract tests, CalDAV seam)
 
 **Phase 1 — Documentación y decisiones:**
 
