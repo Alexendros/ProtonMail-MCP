@@ -8,11 +8,9 @@ Antes de abrir un issue revisa estas vías:
 - `docs/` para guías y referencias técnicas.
 - `docs/adr/` para entender las decisiones de arquitectura.
 
-## 2. Discusiones
+## 2. Preguntas
 
-Para preguntas y conversaciones de uso utiliza la sección
-[Discussions del repositorio](https://github.com/Iniciativas-Alexendros/agent-protonsuite/discussions)
-si está habilitada.
+Para preguntas y conversaciones de uso abre un [issue de tipo pregunta](https://github.com/Iniciativas-Alexendros/agent-protonsuite/issues/new?template=question.yml).
 
 ## 3. Issues
 
@@ -30,7 +28,7 @@ Para asuntos comerciales o de licencia escribe a contacto@alexendros.me.
 
 ## Tiempos de respuesta esperados
 
-- Discussions y preguntas: cuando podamos, sin SLA.
+- Preguntas (issues): cuando podamos, sin SLA.
 - Issues con etiqueta `bug`: revisión inicial en 7 días naturales.
 - Pull requests: primera respuesta en 7 días naturales.
 - Vulnerabilidades: ver `SECURITY.md`.

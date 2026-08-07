@@ -256,8 +256,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) y [Sem
 [1.0.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.0.0
 [0.7.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.7.0
 [0.5.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.5.0
-[0.4.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.4.0
-[0.2.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.2.0
-[0.1.2]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.1.2
-[0.1.1]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.1.1
-[0.1.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.1.0
+[0.4.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.4.0
+[0.2.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.2.0
+[0.1.2]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.1.2
+[0.1.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.1.1
+[0.1.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.1.0

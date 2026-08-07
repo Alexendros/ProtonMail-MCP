@@ -15,7 +15,7 @@ en npm desde GitHub Actions usando **OIDC Trusted Publishing** (sin `NPM_TOKEN`)
 ### 1. npmjs.com — Trusted Publishing
 
 1. Inicia sesión en [npmjs.com](https://npmjs.com)
-2. Ve al paquete: <https://npmjs.com/package/@alexendros/protonsuite-agent>
+2. Ve al paquete: <https://npmjs.com/package/@alexendros/protonsuite-agent/settings/publish>
 3. Settings → Publishing
 4. Activa **"GitHub OIDC Trusted Publishing"**
 5. Añade un publisher:
