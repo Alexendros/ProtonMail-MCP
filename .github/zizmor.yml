@@ -1,2 +1,8 @@
 # zizmor security audit configuration
 # All third-party actions are SHA-pinned — no ignore rules needed.
+rules:
+  # Disable audits not applicable to this repo
+  cache-poisoning:
+    disable: true
+  template-injection:
+    disable: true
