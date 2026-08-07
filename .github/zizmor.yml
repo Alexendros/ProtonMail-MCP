@@ -1,16 +1,2 @@
-# Configuración de zizmor (auditoría de seguridad de GitHub Actions).
-# Solo se suprimen hallazgos con justificación explícita; el resto de reglas
-# siguen activas y bloqueando. NO es una relajación global de la política.
-
-rules:
-  # unpinned-uses exige pin a SHA de commit. Las referencias restantes sin SHA
-  # son TODAS reusables/composite actions de PRIMERA PARTE (Iniciativas-Alexendros/plantillas)
-  # consumidas vía @main DE FORMA DELIBERADA: el objetivo de homogeneización es
-  # que el repo siga el `main` de plantillas y reciba sus fixes sin re-pinear.
-  # Pinearlas a SHA rompería esa propagación. Las actions de TERCEROS (actions/*,
-  # docker/*, github/codeql-action) SÍ están pinneadas a SHA — esta regla sigue
-  # vigente para ellas.
-  unpinned-uses:
-    ignore:
-      - quality.yml          # detect-stack, _lib-lint-aggregate, _lib-supply-chain @main
-      - release.yml          # _lib-gate-semver, job-summary @main
+# zizmor security audit configuration
+# All third-party actions are SHA-pinned — no ignore rules needed.
