@@ -710,10 +710,10 @@ describe('registerMailTools', () => {
         mailbox: 'INBOX', uid: 100, text: 'Gracias por tu mensaje.', reply_all: false, include_quote: true,
       })
       expect(result.content[0].text).toContain('Reply sent to alice@example.com')
-      expect(hoisted.mockBuildReplyOptions).toHaveBeenCalledWith(
-        imap, 'INBOX', 100, { text: 'Gracias por tu mensaje.', html: undefined },
-        true, false, 'me@proton.me',
-      )
+      expect(hoisted.mockBuildReplyOptions).toHaveBeenCalledWith({
+        imap, mailbox: 'INBOX', uid: 100, body: { text: 'Gracias por tu mensaje.', html: undefined },
+        includeQuote: true, replyAll: false, ownAddress: 'me@proton.me',
+      })
       expect(smtp.send).toHaveBeenCalled()
     })
 
@@ -1113,15 +1113,15 @@ describe('branch gap coverage — spread ternarios y ?? [] fallback', () => {
     })
 
     // buildReplyOptions recibe el html (spread ternario línea 554 true branch)
-    expect(hoisted.mockBuildReplyOptions).toHaveBeenCalledWith(
+    expect(hoisted.mockBuildReplyOptions).toHaveBeenCalledWith({
       imap,
-      'INBOX',
-      100,
-      { text: undefined, html: '<p>Reply en HTML</p>' }, // text undefined, html defined
-      true,
-      false,
-      'me@proton.me',
-    )
+      mailbox: 'INBOX',
+      uid: 100,
+      body: { text: undefined, html: '<p>Reply en HTML</p>' },
+      includeQuote: true,
+      replyAll: false,
+      ownAddress: 'me@proton.me',
+    })
     expect(smtp.send).toHaveBeenCalled()
   })
 

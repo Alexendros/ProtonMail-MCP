@@ -286,17 +286,17 @@ describe("buildReplyOptions", () => {
 
   it("returns null when original email not found", async () => {
     (mockImap as any).getEmail.mockResolvedValueOnce(null);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 42, { text: "Reply" }, false, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 42, body: { text: "Reply" }, includeQuote: false, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result).toBeNull();
   });
 
   it("builds reply options preserving thread", async () => {
     (mockImap as any).getEmail.mockResolvedValueOnce(baseEmail);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Reply body" }, false, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Reply body" }, includeQuote: false, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result).not.toBeNull();
     expect(result!.to).toEqual(["alice@example.com"]);
     expect(result!.subject).toBe("Re: Original subject");
@@ -310,9 +310,9 @@ describe("buildReplyOptions", () => {
       replyTo: ["reply@example.com"],
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Reply" }, false, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Reply" }, includeQuote: false, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.to).toEqual(["reply@example.com"]);
   });
 
@@ -323,9 +323,9 @@ describe("buildReplyOptions", () => {
       cc: ["carol@example.com", "me@proton.me"],
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Reply" }, false, true, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Reply" }, includeQuote: false, replyAll: true, ownAddress: "me@proton.me",
+    });
     expect(result!.cc).toEqual(expect.arrayContaining(["carol@example.com"]));
     expect(result!.cc).not.toContain("me@proton.me");
   });
@@ -337,17 +337,17 @@ describe("buildReplyOptions", () => {
       cc: [],
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Reply" }, false, true, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Reply" }, includeQuote: false, replyAll: true, ownAddress: "me@proton.me",
+    });
     expect(result!.cc).toEqual([]);
   });
 
   it("includes quote when includeQuote is true", async () => {
     (mockImap as any).getEmail.mockResolvedValueOnce(baseEmail);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "My reply" }, true, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "My reply" }, includeQuote: true, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.text).toContain("> Original body text");
     expect(result!.text).toContain("My reply");
   });
@@ -358,9 +358,9 @@ describe("buildReplyOptions", () => {
       htmlBody: "<p>Original HTML</p>",
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { html: "<b>My HTML</b>" }, true, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { html: "<b>My HTML</b>" }, includeQuote: true, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.html).toContain("Original HTML");
     expect(result!.html).toContain("<b>My HTML</b>");
   });
@@ -372,9 +372,9 @@ describe("buildReplyOptions", () => {
       htmlBody: undefined,
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { html: "<b>Reply</b>" }, true, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { html: "<b>Reply</b>" }, includeQuote: true, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.html).toContain("<b>Reply</b>");
     expect(result!.html).toContain("<blockquote");
     expect(result!.html).toContain("Line 1<br>Line 2");
@@ -382,9 +382,9 @@ describe("buildReplyOptions", () => {
 
   it("html is undefined when body has no html and original has no htmlBody", async () => {
     (mockImap as any).getEmail.mockResolvedValueOnce(baseEmail);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Plain only" }, true, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Plain only" }, includeQuote: true, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.html).toBeUndefined();
   });
 
@@ -398,9 +398,9 @@ describe("buildReplyOptions", () => {
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
     // includeQuote: true + html body → buildQuote ejecuta ambos ?? de from, date, textBody
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { html: "<b>Reply</b>" }, true, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { html: "<b>Reply</b>" }, includeQuote: true, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.text).toContain("On ,  wrote:"); // date??'' + from??'' → ambos vacíos
     expect(result!.html).toContain("<b>Reply</b>");
     expect(result!.html).toContain("<blockquote");
@@ -413,9 +413,9 @@ describe("buildReplyOptions", () => {
       replyTo: [],
     };
     (mockImap as any).getEmail.mockResolvedValueOnce(email);
-    const result = await buildReplyOptions(
-      mockImap as any, "INBOX", 1, { text: "Reply" }, false, false, "me@proton.me",
-    );
+    const result = await buildReplyOptions({
+      imap: mockImap as any, mailbox: "INBOX", uid: 1, body: { text: "Reply" }, includeQuote: false, replyAll: false, ownAddress: "me@proton.me",
+    });
     expect(result!.to).toEqual([]);
   });
 });

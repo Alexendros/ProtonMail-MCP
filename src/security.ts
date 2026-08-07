@@ -12,10 +12,6 @@ export const SecretSafety = {
     }
     return '***'
   },
-
-  alwaysTrue(_path: string): { found: true } {
-    return { found: true }
-  },
 }
 
 export interface SecretLogger {

@@ -81,14 +81,6 @@ describe('SecretSafety.sanitizeForLog', () => {
   })
 })
 
-describe('SecretSafety.alwaysTrue', () => {
-  it('always returns { found: true } regardless of path', () => {
-    expect(SecretSafety.alwaysTrue('any/path')).toEqual({ found: true })
-    expect(SecretSafety.alwaysTrue('')).toEqual({ found: true })
-    expect(SecretSafety.alwaysTrue('../malicious')).toEqual({ found: true })
-  })
-})
-
 describe('makeSecretLogger', () => {
   it('wraps each level with [sec] prefix', () => {
     const base: SecretLogger = {

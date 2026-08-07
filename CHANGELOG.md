@@ -11,18 +11,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-### Changed
-- **Test Coverage (Auditoría histórica):** Crecimiento medible consolidado en tracked artifacts del repo. Evolución verificada:
-  - `90.65%` (Pre-PR #68) → `94.65%` (PR #69)
-  - `96.67%` (Branch Hunt 0, endurecimiento ESLint)
-  - `97.81%` → `97.91%` (Registros pre-v0.8.0 en `gh-pages`)
-  - `98.05%` (Actual local post-Batch B+D+dep pruning: 899 tests en 43 archivos)
+- **ICalendarAdapter port** in `src/clients/interfaces.ts` (CalDAV seam, interface only — blocked per ADR-005).
+- **Contract tests** (`tests/contract/`): validates live MCP tool surface via HTTP/SSE (approach A), 50-tool golden set, deterministic JSON Schema snapshot (`tool-catalog.snap`).
+- **Observability**: Prometheus-style `/metrics` endpoint (bearer auth), MCP request/session instrumentation (`src/utils/metrics.ts`).
 
-  > *Nota: El valor intermedio `97.62%` previo al ff-pull de `fix/seguridad-fase-1` se documenta como una medición local efímera, no materializada en artefactos tracked.*
+### Changed
+
+- **Pre-commit** mirrors CI: `.husky/pre-commit` → lint-staged (eslint --fix on src) + typecheck + test suite (934 tests, 98% coverage).
+- **ROADMAP.md** updated to v1.2.1.
+- **TASKS.md** removed (stale, referenced non-existent worktree).
 
 ### Fixed
 
-## [0.8.0] - 2026-07-20
+- **E2E drive tests**: `await` missing on async `DriveAuditor` calls in `tests/e2e/drive.e2e.ts`.
+- **`.lintstagedrc.json`**: scope from `*.ts` (included tests) to `src/**/*.ts` (CI-aligned).
+
+## [1.2.1] - 2026-07-20
+
+### Fixed
+
+- Restore truncated `agent.test.ts` after merge conflict.
+
+## [1.2.0] - 2026-07-20
+
+### Added
+
+- **Branch Hunt 2** + ESLint `off→warn` bajo riesgo (coverage improvement).
+
+## [1.1.0] - 2026-07-19
+
+### Changed
+
+- **TypeScript strict flags**: enabled `noImplicitOverride` + `exactOptionalPropertyTypes` in tsconfig.
+
+## [1.0.1] - 2026-07-17
+
+### Fixed
+
+- SHA-256 hash for Pass duplicate detection, `--force` on insert/generate.
+- `fs.readdir` for Pass `list()`, reject `..` paths, fix e2e path.
+
+## [1.0.0] - 2026-07-12
+
+### BREAKING
+
+- **Rebrand a Proton Suite Agent v1.0.0**: el proyecto abarca Mail, Pass, Calendar y Drive. Package renombrado a `@alexendros/protonsuite-agent`, binarios `protonsuite-*`, repo `agent-protonsuite`. Commit BREAKING CHANGE desde v0.5.0 → bump semver major a v1.0.0.
 
 ### Added
 
@@ -243,8 +276,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `@alexendros/protonmail-mcp` (old npm name) deprecated with `npm deprecate` pointing to the new package.
 
-[Unreleased]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v0.8.0...HEAD
-[0.8.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.8.0
+[Unreleased]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.2.1
+[1.2.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.2.0
+[1.1.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.1.0
+[1.0.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.0.1
+[1.0.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.0.0
 [0.7.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.7.0
 [0.5.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.4.0
