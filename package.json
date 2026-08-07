@@ -85,6 +85,7 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "knip": "knip --no-exit-code",
+    "validate:renovate": "node scripts/validate-renovate.mjs",
     "prepare": "husky"
   },
   "pnpm": {
@@ -131,6 +132,7 @@
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-unicorn": "^65.0.1",
     "husky": "^9.1.7",
+    "json5": "^2.2.3",
     "knip": "^5.88.1",
     "license-checker": "^25.0.1",
     "lint-staged": "^15.5.2",
