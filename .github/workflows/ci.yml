@@ -92,8 +92,8 @@ jobs:
             echo "::warning::GreenMail container not detected (Docker service may not work on this runner)"
           fi
           for i in $(seq 1 60); do
-            if (exec 3<>/dev/tcp/127.0.0.1/3143) 2>/dev/null; then
-              echo "GreenMail listo (attempt $i)"; exec 3>&-; exit 0
+            if nc -z localhost 3143 2>/dev/null; then
+              echo "GreenMail listo (attempt $i)"; exit 0
             fi
             sleep 2
           done
@@ -101,7 +101,7 @@ jobs:
           docker ps 2>/dev/null || echo "::warning::Docker not available on runner"
           exit 1
       - name: Install pass + gnupg (needed by pass.e2e.ts)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq pass gnupg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq pass gnupg netcat-openbsd
       - name: E2E full cycle (send → read → flag → move → delete)
         id: e2e
         env:
@@ -130,7 +130,7 @@ jobs:
       - name: Install pass + gnupg (E2E)
         run: |
           if ! command -v pass &>/dev/null; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq pass gnupg
+            sudo apt-get update -qq && sudo apt-get install -y -qq pass gnupg netcat-openbsd
           fi
       - id: e2e_pass
         run: bash scripts/e2e-pass.sh

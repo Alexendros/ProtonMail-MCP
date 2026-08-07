@@ -13,6 +13,10 @@
     "default": true,
     "MD013": false,
     "MD034": false,
-    "MD060": false
+    "MD060": false,
+    "MD040": false,
+    "MD032": false,
+    "MD038": false,
+    "MD056": false
   }
 }

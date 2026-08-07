@@ -1,0 +1,4 @@
+# actionlint configuration
+# Suppress shellcheck warnings that are false positives for our use case
+matcher:
+  SC2086: false  # Double quote to prevent globbing - not applicable in our network check context
