@@ -122,12 +122,12 @@ Después del `initialize`, guarda el header `Mcp-Session-Id` y envíalo en cada 
 
 ## Workflows recomendados
 
-- [`playbooks/onboarding.md`](./onboarding.md): puesta en marcha del agente.
-- [`playbooks/organize-inbox.md`](./organize-inbox.md): organizar y archivar.
-- [`playbooks/triage-email.md`](./triage-email.md): clasificar INBOX y apartar correos comerciales.
-- [`playbooks/fraud-detection.md`](./fraud-detection.md): revisar correos sospechosos.
-- [`playbooks/reply-organize.md`](./reply-organize.md): responder y archivar.
-- [`playbooks/setup-checklist.md`](./setup-checklist.md): verificar precondiciones antes de operar.
+- [`playbooks/onboarding.md`](../playbooks/onboarding.md): puesta en marcha del agente.
+- [`playbooks/organize-inbox.md`](../playbooks/organize-inbox.md): organizar y archivar.
+- [`playbooks/triage-email.md`](../playbooks/triage-email.md): clasificar INBOX y apartar correos comerciales.
+- [`playbooks/fraud-detection.md`](../playbooks/fraud-detection.md): revisar correos sospechosos.
+- [`playbooks/reply-organize.md`](../playbooks/reply-organize.md): responder y archivar.
+- [`playbooks/setup-checklist.md`](../playbooks/setup-checklist.md): verificar precondiciones antes de operar.
 
 ## Formato de respuesta
 
