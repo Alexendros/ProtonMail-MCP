@@ -8,7 +8,7 @@ Gracias por considerar contribuir. Este proyecto es un agente MCP multi-producto
 
 - **🐛 Reportar un bug** — usa la [plantilla de bug](./.github/ISSUE_TEMPLATE/bug-report.yml). Incluye versión, transporte, Node, SO y pasos de reproducción.
 - **💡 Proponer una feature** — usa la [plantilla de feature](./.github/ISSUE_TEMPLATE/feature-request.yml). Sé concreto: nombre de tool, inputs, outputs, o capacidad de agente.
-- **💬 Preguntar** — usa [Discussions](https://github.com/Iniciativas-Alexendros/agent-protonsuite/discussions), no el issue tracker.
+- **💬 Preguntar** — usa [Issues](https://github.com/Iniciativas-Alexendros/agent-protonsuite/issues/new?template=question.yml), no el issue tracker.
 - **🧑‍💻 Enviar un patch** — lee el workflow de PR abajo.
 
 ## Workflow de pull request
