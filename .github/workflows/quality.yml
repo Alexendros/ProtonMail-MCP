@@ -76,6 +76,11 @@ jobs:
         with:
           args: "--no-progress"
           fail: true
+          files: |
+            **/*.md
+            !node_modules/**
+            !dist/**
+            !coverage/**
 
   actionlint:
     name: Action lint

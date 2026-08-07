@@ -1,3 +1,8 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
 npx lint-staged
 pnpm typecheck
 pnpm test
+npx markdownlint-cli2 --config .markdownlint-cli2.jsonc "**/*.md"
+docker run --rm -v "$(pwd):/github/workspace" -w /github/workspace rhysd/actionlint:latest -color

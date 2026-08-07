@@ -1,0 +1,21 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Full quality suite - mirrors CI quality.yml
+echo "🔍 Running markdownlint..."
+npx markdownlint-cli2 --config .markdownlint-cli2.jsonc "**/*.md" || exit 1
+
+echo "🔍 Running actionlint..."
+docker run --rm -v "$(pwd):/github/workspace" -w /github/workspace rhysd/actionlint:latest -color || exit 1
+
+echo "🔍 Running license check..."
+pnpm run license-check:prod || exit 1
+
+echo "🔍 Running knip..."
+pnpm run knip || exit 1
+
+echo "🔍 Running renovate validate..."
+pnpm run validate:renovate || exit 1
+
+echo "✅ All quality checks passed!"
+echo "ℹ️  Link check (lychee) runs in CI only - slow for local"
