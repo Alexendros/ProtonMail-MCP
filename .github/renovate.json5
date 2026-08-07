@@ -1,0 +1,128 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// Renovate para agent-protonsuite
+//
+// Reemplazo TOTAL de Dependabot: gestiona actualizaciones de dependencias,
+// actualización de GitHub Actions y alertas de vulnerabilidad de GitHub.
+//
+// Base: presets org (infraestructura-stack). Las decisiones ESPECÍFICAS de
+// este repo se documentan inline. Matriz resumida en docs/renovate.md.
+// ──────────────────────────────────────────────────────────────────────────────
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Presets org — defaults compartidos del stack (node, labels base, etc.).
+  extends: [
+    "local>Iniciativas-Alexendros/infraestructura-stack:renovate-presets/default",
+    "local>Iniciativas-Alexendros/infraestructura-stack:renovate-presets/node",
+  ],
+
+  // --- Calendario / zona horaria ---
+  // Ventana única semanal (lun 05:00 Madrid). Evita ruido de PRs.
+  // Coincide con el antiguo timezone de Dependabot. Europa/Madrid.
+  timezone: "Europe/Madrid",
+  schedule: ["before 5am on Monday"],
+
+  // --- Repositorio ---
+  // pnpm workspaces + pnpm.overrides + onlyBuiltDependencies (esbuild,
+  // unrs-resolver). Renovate detecta pnpm de pnpm-lock.yaml y respeta
+  // onlyBuiltDependencies → no config extra necesaria.
+
+  // --- Visibilidad / trazabilidad ---
+  dependencyDashboard: true,          // issue única con el estado de todos los updates
+  labels: ["dependencies"],           // reusa el label existente del repo (de Dependabot)
+  assignees: ["alexendros"],          // CODEOWNERS también solicita review en apertura
+  separateMinorPatch: true,           // una PR por tipo de update → sin cascade-fail
+  // Rebaza los branches cuando la base adelanta (keep PRs mergeables + CI en última base).
+  rebaseWhen: "behind-base-branch",         // mantiene branches al día vs main
+  prHourlyLimit: 2,                   // throttle: max 2 PRs/hora → menor carga CI
+  semanticCommits: "enabled",         // títulos conventional (deps:) → squash-merge
+                                       // pasa commitlint (scope `deps` está permitido)
+
+  // --- Seguridad (sustituye alertas de Dependabot) ---
+  // GitHub expone vulnerability alerts; Renovate abre PRs para pararlas.
+  // Se levantan INSTANTÁNEAMENTE (horario amplio, no la ventana semanal) para
+  // que las vulns no esperen hasta el lunes. Revisión manual siempre.
+  // vulnerabilityFixStrategy=lowest → propone el primer fix disponible (cambio
+  // mínimo) facilitando el review de seguridad.
+  vulnerabilityAlerts: {
+    enabled: true,
+    schedule: ["before 10am every weekday"],
+    vulnerabilityFixStrategy: "lowest",
+    automerge: false,
+    addLabels: ["security"],
+  },
+
+  // --- Mantenimiento de lockfile (weekly) ---
+  // Consolida todas las minor/patch de pnpm en un lockfile maintenance único.
+  // Renovate regenera pnpm-lock.yaml con --frozen-lockfile respetable en CI.
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 3am on Monday"],
+    automerge: false,
+  },
+
+  // --- Reglas por tipo de dependencia ---
+  packageRules: [
+    // [1] MCP SDK — integración núcleo del protocolo. Revisión manual SIEMPRE.
+    // Apretado a server.json / mcpName / transports (ADR-002). Nunca auto-merge,
+    // ni siquiera en minor/patch, porque puede romper el contrato con clientes.
+    {
+      matchPackageNames: ["@modelcontextprotocol/sdk"],
+      groupName: "MCP SDK",
+      automerge: false,
+      schedule: ["at any time"],
+      addLabels: ["mcp"],
+    },
+
+    // [2] Deps de PRODUCCIÓN — runtime + supply chain.
+    // minor/patch: agrupados, revisión requerida, nunca auto-merge.
+    {
+      matchDatasources: ["npm"],
+      matchDepTypes: ["dependencies"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "Prod deps (minor/patch)",
+      automerge: false,
+    },
+
+    // [3] Deps de DESARROLLO — minor/patch con CI verde → auto-merge.
+    // Low risk, mantiene la toolchain fresca. Requiere:
+    //   (a) branch protection con required status checks (ci.yml + quality.yml)
+    //   (b) Renovate en el allowlist de merge (o main sin protection → Renovate
+    //       espera a que CI esté verde antes de mergear).
+    {
+      matchDatasources: ["npm"],
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "Dev deps (autodemerge)",
+      automerge: true,
+      automergeType: "branch",
+      addLabels: ["dev-deps"],
+    },
+
+    // [4] Major updates — breaking changes, siempre requieren revisión.
+    {
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      schedule: ["at any time"],
+      addLabels: ["breaking-change"],
+    },
+
+    // [5] GitHub Actions — mantiene SHA digests actualizados (defense in depth).
+    // Todas las actions están pinneadas a SHA (zizmor unpinned-uses). Revisa-
+    // tual manual: supply-chain no se auto-mergea.
+    {
+      matchDatasources: ["github-actions"],
+      automerge: false,
+      addLabels: ["dependencies"],
+    },
+
+    // [6] Imágenes base Docker (Dockerfile / Dockerfile.bridge) — pin a digest.
+    // Dockerfile usa `node:22-alpine` (tag) → Renovate añadirá el digest.
+    // Dockerfile.bridge ya pinnea a sha256 (se conserva). No auto-merge.
+    {
+      matchDatasources: ["docker"],
+      pinDigests: true,
+      automerge: false,
+    },
+  ],
+}

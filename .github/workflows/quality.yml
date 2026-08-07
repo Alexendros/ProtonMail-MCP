@@ -89,17 +89,22 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 22
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: latest
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup-project
       - run: pnpm run knip
+
+  # ────────────────────────────────────────────────────────────────────
+  # Renovate config validation
+  # ────────────────────────────────────────────────────────────────────
+  renovate-validate:
+    name: Validate Renovate config
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: ./.github/actions/setup-project
+      - name: Validate renovate.json5
+        run: pnpm run validate:renovate
+
   # attest requiere id-token + attestations write y NO funciona en PR de
   # fork (token de solo lectura). Se atestigua solo en push a main del
   # repo propio; en PR se genera SBOM pero no se intenta el attest.
