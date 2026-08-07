@@ -16,7 +16,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { BridgeClient } from "../../src/bridge/bridge-client.js";
 import type { Config } from "../../src/config.js";
-import { buildServer, registerBridgeTools } from "../../src/server.js";
+import { buildServer } from "../../src/server.js";
+import { registerBridgeTools } from "../../src/server/bridge.js";
 
 // ---------------------------------------------------------------------------
 // Mocks

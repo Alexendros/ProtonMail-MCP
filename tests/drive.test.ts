@@ -31,9 +31,11 @@ const hoisted = vi.hoisted(() => {
   const mockMkdirSync = vi.fn()
   const mockReaddirSync = vi.fn()
   const mockStatSync = vi.fn()
+  const mockReaddir = vi.fn()
+  const mockStat = vi.fn()
 
   return {
-    silentLog, mockExecFile, mockExecFileSync, mockExistsSync, mockMkdirSync, mockReaddirSync, mockStatSync,
+    silentLog, mockExecFile, mockExecFileSync, mockExistsSync, mockMkdirSync, mockReaddirSync, mockStatSync, mockReaddir, mockStat,
     setNextResult: (stdout: string) => { nextStdout = stdout },
     setNextError: (err: Error) => { nextError = err },
   }
@@ -48,6 +50,11 @@ vi.mock('node:fs', () => ({
   mkdirSync: hoisted.mockMkdirSync,
   readdirSync: hoisted.mockReaddirSync,
   statSync: hoisted.mockStatSync,
+  readFileSync: vi.fn(),
+}))
+vi.mock('node:fs/promises', () => ({
+  readdir: hoisted.mockReaddir,
+  stat: hoisted.mockStat,
 }))
 
 beforeEach(() => { vi.clearAllMocks() })
@@ -192,12 +199,12 @@ describe('DriveClient', () => {
   describe('status', () => {
     it('staging existente con file count y auth ok', async () => {
       hoisted.mockExistsSync.mockReturnValue(true)
-      hoisted.mockReaddirSync.mockImplementation((dir: string) => {
+      hoisted.mockReaddir.mockImplementation(async (dir: string) => {
         if (dir === '/tmp/staging') return ['f1.txt', 'sub']
         if (dir === '/tmp/staging/sub') return ['f2.txt']
         return []
       })
-      hoisted.mockStatSync.mockImplementation((p: string) => ({
+      hoisted.mockStat.mockImplementation(async (p: string) => ({
         isDirectory: () => p.endsWith('/sub'),
         size: 100,
       }))
@@ -208,10 +215,10 @@ describe('DriveClient', () => {
       expect(r.authenticated).toBe(true)
       expect(r.ok).toBe(true)
     })
-    it('salta archivos con statSync fallido (catch vacío)', async () => {
+    it('salta archivos con stat fallido (catch vacío)', async () => {
       hoisted.mockExistsSync.mockReturnValue(true)
-      hoisted.mockReaddirSync.mockReturnValue(['bad.txt'])
-      hoisted.mockStatSync.mockImplementation(() => { throw new Error('EACCES') })
+      hoisted.mockReaddir.mockResolvedValue(['bad.txt'])
+      hoisted.mockStat.mockRejectedValue(new Error('EACCES'))
       hoisted.setNextResult('')
       const r = await makeClient().status()
       expect(r.stagingExists).toBe(true)

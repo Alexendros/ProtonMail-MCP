@@ -1,0 +1,1366 @@
+[
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "description": "Output format",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_list_folders",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "path": {
+          "description": "Mailbox path to create",
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_create_folder",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "mailbox": {
+          "default": "INBOX",
+          "description": "Mailbox path, e.g. INBOX",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_mailbox_status",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "limit": {
+          "default": 25,
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "offset": {
+          "default": 0,
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_list_emails",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "before": {
+          "description": "ISO date — only messages before this date",
+          "type": "string",
+        },
+        "fields": {
+          "default": [
+            "text",
+          ],
+          "description": "Which fields to search. 'text' = anywhere.",
+          "items": {
+            "enum": [
+              "text",
+              "subject",
+              "from",
+              "to",
+              "body",
+            ],
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "from_address": {
+          "description": "Restrict to messages from this address",
+          "type": "string",
+        },
+        "limit": {
+          "default": 25,
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "query": {
+          "description": "Keyword to search for",
+          "type": "string",
+        },
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+        "since": {
+          "description": "ISO date — only messages on/after this date",
+          "type": "string",
+        },
+        "to_address": {
+          "description": "Restrict to messages to this address",
+          "type": "string",
+        },
+        "unseen_only": {
+          "default": false,
+          "description": "Only return unread messages",
+          "type": "boolean",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_search_emails",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "include_html": {
+          "default": false,
+          "description": "Include HTML body in addition to text",
+          "type": "boolean",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+        "uid": {
+          "description": "Message UID (from list/search)",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+      ],
+      "type": "object",
+    },
+    "name": "proton_get_email",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "index": {
+          "description": "Zero-based index in the attachments array",
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "max_bytes": {
+          "default": 10485760,
+          "description": "Maximum attachment size in bytes (default 10 MB, hard cap 50 MB)",
+          "exclusiveMinimum": 0,
+          "maximum": 52428800,
+          "type": "integer",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+        "index",
+      ],
+      "type": "object",
+    },
+    "name": "proton_get_attachment",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "attachments": {
+          "items": {
+            "properties": {
+              "content_base64": {
+                "type": "string",
+              },
+              "content_type": {
+                "type": "string",
+              },
+              "filename": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "filename",
+              "content_base64",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "bcc": {
+          "items": {
+            "format": "email",
+            "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "cc": {
+          "items": {
+            "format": "email",
+            "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "html": {
+          "type": "string",
+        },
+        "reply_to": {
+          "format": "email",
+          "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+          "type": "string",
+        },
+        "subject": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "text": {
+          "type": "string",
+        },
+        "to": {
+          "description": "Recipient addresses",
+          "items": {
+            "format": "email",
+            "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+      },
+      "required": [
+        "to",
+        "subject",
+      ],
+      "type": "object",
+    },
+    "name": "proton_send_email",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "html": {
+          "type": "string",
+        },
+        "include_quote": {
+          "default": true,
+          "type": "boolean",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "reply_all": {
+          "default": false,
+          "type": "boolean",
+        },
+        "text": {
+          "type": "string",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+      ],
+      "type": "object",
+    },
+    "name": "proton_reply_email",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "html": {
+          "type": "string",
+        },
+        "include_attachments": {
+          "default": true,
+          "type": "boolean",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "text": {
+          "type": "string",
+        },
+        "to": {
+          "items": {
+            "format": "email",
+            "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+            "type": "string",
+          },
+          "minItems": 1,
+          "type": "array",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+        "to",
+      ],
+      "type": "object",
+    },
+    "name": "proton_forward_email",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "action": {
+          "description": "Shorthand action",
+          "enum": [
+            "read",
+            "unread",
+            "starred",
+            "unstarred",
+            "custom",
+          ],
+          "type": "string",
+        },
+        "add_flags": {
+          "description": "Custom flags to add (action=custom only)",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "remove_flags": {
+          "description": "Custom flags to remove (action=custom only)",
+          "items": {
+            "type": "string",
+          },
+          "type": "array",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+        "action",
+      ],
+      "type": "object",
+    },
+    "name": "proton_flag_email",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "from_mailbox": {
+          "type": "string",
+        },
+        "to_mailbox": {
+          "type": "string",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "from_mailbox",
+        "uid",
+        "to_mailbox",
+      ],
+      "type": "object",
+    },
+    "name": "proton_move_email",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "mailbox": {
+          "default": "INBOX",
+          "type": "string",
+        },
+        "mode": {
+          "default": "trash",
+          "enum": [
+            "trash",
+            "permanent",
+          ],
+          "type": "string",
+        },
+        "trash_path": {
+          "description": "Override for the Trash mailbox path. If omitted, the \Trash special-use mailbox is auto-detected (works with Papelera/Corbeille/etc.).",
+          "type": "string",
+        },
+        "uid": {
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "uid",
+      ],
+      "type": "object",
+    },
+    "name": "proton_delete_email",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "goal": {
+          "default": "organize",
+          "description": "Agent goal: organize (propose folders/labels), monitor (inspect only), alert (threats only).",
+          "enum": [
+            "organize",
+            "monitor",
+            "alert",
+          ],
+          "type": "string",
+        },
+        "response_format": {
+          "default": "json",
+          "description": "Output format. JSON is recommended for programmatic consumers.",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_agent_plan",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "filter": {
+          "type": "string",
+        },
+        "response_format": {
+          "default": "json",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_pass_list",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "path": {
+          "description": "Entry path in the password store",
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_get",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "length": {
+          "default": 24,
+          "maximum": 128,
+          "minimum": 12,
+          "type": "integer",
+        },
+        "path": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_generate",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_pass_health",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "path": {
+          "description": "Entry path, e.g. proton/bridge/api-key",
+          "type": "string",
+        },
+        "secret": {
+          "description": "The secret value to store.",
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+        "secret",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_insert",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "path": {
+          "description": "Entry path to remove",
+          "type": "string",
+        },
+      },
+      "required": [
+        "path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_remove",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "from": {
+          "description": "Current entry path",
+          "type": "string",
+        },
+        "to": {
+          "description": "New entry path",
+          "type": "string",
+        },
+      },
+      "required": [
+        "from",
+        "to",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_move",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "dst": {
+          "description": "Destination entry path",
+          "type": "string",
+        },
+        "src": {
+          "description": "Source entry path",
+          "type": "string",
+        },
+      },
+      "required": [
+        "src",
+        "dst",
+      ],
+      "type": "object",
+    },
+    "name": "proton_pass_copy",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_calendar_list_events",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_calendar_create_event",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_calendar_list_calendars",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+        "staging_dir": {
+          "description": "Override staging directory path",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_audit",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_status",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "dry_run": {
+          "default": true,
+          "description": "If true, only shows the plan without moving files.",
+          "type": "boolean",
+        },
+        "staging_dir": {
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_organize",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+        "staging_dir": {
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_format_report",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "remote_path": {
+          "default": "/my-files",
+          "description": "Remote path on Proton Drive, e.g. /my-files/Documents.",
+          "type": "string",
+        },
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_list_files",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "local_path": {
+          "description": "Override staging directory locally. Defaults to configured stagingDir.",
+          "type": "string",
+        },
+        "remote_path": {
+          "default": "/my-files",
+          "description": "Remote path on Proton Drive to download.",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_download",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "local_path": {
+          "description": "Override staging directory locally.",
+          "type": "string",
+        },
+        "remote_path": {
+          "default": "/my-files",
+          "description": "Remote destination path on Proton Drive.",
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_upload",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "remote_path": {
+          "description": "Remote Proton Drive path to share.",
+          "type": "string",
+        },
+        "user_email": {
+          "description": "Email of the user to invite.",
+          "format": "email",
+          "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "remote_path",
+        "user_email",
+      ],
+      "type": "object",
+    },
+    "name": "proton_drive_share",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "from": {
+          "description": "Current remote path",
+          "type": "string",
+        },
+        "to": {
+          "description": "Destination remote path",
+          "type": "string",
+        },
+      },
+      "required": [
+        "from",
+        "to",
+      ],
+      "type": "object",
+    },
+    "name": "proton_drive_move",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "from": {
+          "description": "Source remote path",
+          "type": "string",
+        },
+        "to": {
+          "description": "Destination remote path",
+          "type": "string",
+        },
+      },
+      "required": [
+        "from",
+        "to",
+      ],
+      "type": "object",
+    },
+    "name": "proton_drive_copy",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "remote_path": {
+          "description": "Remote path for the new folder",
+          "type": "string",
+        },
+      },
+      "required": [
+        "remote_path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_drive_create_folder",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "remote_path": {
+          "description": "Remote path to remove",
+          "type": "string",
+        },
+      },
+      "required": [
+        "remote_path",
+      ],
+      "type": "object",
+    },
+    "name": "proton_drive_remove",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "description": "Output format.",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_auth_status",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "force": {
+          "default": false,
+          "description": "If true, skips the already-authenticated check and returns login instructions.",
+          "type": "boolean",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_drive_auth_login",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_suite_status",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_ecosystem_discover",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_ecosystem_health",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "product": {
+          "enum": [
+            "bridge",
+            "pass",
+            "drive",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_ecosystem_check_updates",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "product": {
+          "default": "drive",
+          "enum": [
+            "bridge",
+            "pass",
+            "drive",
+            "gpg",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_ecosystem_install",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_bridge_health",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_bridge_status",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_bridge_info",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "password": {
+          "type": "string",
+        },
+        "totp": {
+          "type": "string",
+        },
+        "user": {
+          "format": "email",
+          "pattern": "^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$",
+          "type": "string",
+        },
+      },
+      "required": [
+        "user",
+        "password",
+      ],
+      "type": "object",
+    },
+    "name": "proton_bridge_login",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {},
+      "type": "object",
+    },
+    "name": "proton_bridge_logout",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "properties": {
+        "response_format": {
+          "default": "markdown",
+          "enum": [
+            "markdown",
+            "json",
+          ],
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "proton_bridge_accounts",
+  },
+]

@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import type { IImapClient } from '../clients/interfaces.js'
+import type { IPassClient } from '../clients/interfaces.js'
 import type { createLogger, Config } from '../config.js'
 import type { DriveClient } from '../drive.js'
-import type { ImapClient } from '../imap.js'
-import { PassClient } from '../pass.js'
 
 type Logger = ReturnType<typeof createLogger>
 
@@ -14,13 +14,14 @@ export function registerSuiteTool(
   deps: {
     cfg: Config
     log: Logger
-    imap: ImapClient
+    imap: IImapClient
     driveClient: DriveClient | undefined
     passwordResolver: () => Promise<string>
     bridgeCfg: Config['products']['mail']['bridge']
+    passClient: IPassClient | undefined
   },
 ) {
-  const { cfg, log, imap, driveClient, passwordResolver, bridgeCfg } = deps
+  const { cfg, imap, driveClient, passwordResolver, bridgeCfg, passClient } = deps
   server.registerTool(
     'proton_suite_status',
     {
@@ -82,13 +83,9 @@ export function registerSuiteTool(
         }
       }
 
-      if (cfg.products.pass.enabled) {
+      if (cfg.products.pass.enabled && passClient) {
         try {
-          const pc = new PassClient(
-            { storeDir: cfg.products.pass.storeDir },
-            log,
-          )
-          const h = await pc.health()
+          const h = await passClient.health()
           passStatus = {
             available: true,
             connected: h.ok,

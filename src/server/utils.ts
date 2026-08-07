@@ -1,8 +1,8 @@
 import type { SearchObject } from 'imapflow'
-import type { ImapClient } from '../imap.js'
+import type { IImapClient } from '../clients/interfaces.js'
 
 export async function resolveTrashPath(
-  imap: ImapClient,
+  imap: IImapClient,
   override?: string,
 ): Promise<string> {
   if (override) return override

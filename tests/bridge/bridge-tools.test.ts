@@ -34,7 +34,7 @@ vi.mock('../../src/bridge/bridge-client.js', () => {
 })
 
 import { BridgeClient } from '../../src/bridge/bridge-client.js'
-import { registerBridgeTools } from '../../src/server.js'
+import { registerBridgeTools } from '../../src/server/bridge.js'
 
 const capturedTools = new Map<
   string,
