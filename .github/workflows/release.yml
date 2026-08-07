@@ -13,9 +13,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # ────────────────────────────────────────────────────────────────────
-  # Verificación previa — typecheck + test + build
-  # ────────────────────────────────────────────────────────────────────
   verify:
     name: Verify
     runs-on: ubuntu-latest
@@ -36,9 +33,6 @@ jobs:
       - run: pnpm test
       - run: pnpm run build
 
-  # ────────────────────────────────────────────────────────────────────
-  # semantic-release — bump, changelog, tag, GitHub release
-  # ────────────────────────────────────────────────────────────────────
   semantic-release:
     name: Semantic Release
     needs: verify
@@ -64,36 +58,11 @@ jobs:
           version: latest
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
-      - run: npx semantic-release
+      - id: release
+        run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      # semantic-release actualiza CHANGELOG.md y package.json version en el
-      # working directory (via @semantic-release/changelog y @semantic-release/npm).
-      # Los tags y releases de GitHub los gestiona @semantic-release/github vía API.
-      # Este step commitea los artefactos actualizados de vuelta a main.
-      - name: Commit CHANGELOG and version bump to main
-        if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-
-          git add CHANGELOG.md package.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(release): ${TAG} [skip ci]"
-            git push origin HEAD:main
-            echo "Committed and pushed ${TAG} release artifacts to main"
-          else
-            echo "No release artifacts to commit (${TAG})"
-          fi
-  # ────────────────────────────────────────────────────────────────────
-  # Publicación a npm · SOLO tras release exitoso.
-  # Auth: TRUSTED PUBLISHING (OIDC) — sin NPM_TOKEN.
-  # ────────────────────────────────────────────────────────────────────
   publish-npm:
     name: Publish to npm
     needs: semantic-release
@@ -110,7 +79,6 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 22
-      # Trusted publishing requiere npm >= 11.5.1; los runners traen 10.x
       - name: Upgrade npm (OIDC trusted publishing)
         run: npm install -g npm@latest
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
@@ -121,9 +89,6 @@ jobs:
       - name: Publish (OIDC trusted publishing + provenance)
         run: npm publish --provenance --access public
 
-  # ────────────────────────────────────────────────────────────────────
-  # Publicación a GHCR · multi-tag en push a main
-  # ────────────────────────────────────────────────────────────────────
   publish-ghcr:
     name: Build & push to GHCR
     needs: [verify, semantic-release]
