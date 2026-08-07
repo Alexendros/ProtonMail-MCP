@@ -23,6 +23,9 @@ jobs:
       matrix:
         node: [22]
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-project
 
       - name: Lint
@@ -50,6 +53,9 @@ jobs:
     name: Dependency audit
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-project
       - name: Critical vulnerabilities only
         run: pnpm audit --audit-level=critical
@@ -67,6 +73,9 @@ jobs:
         env:
           GREENMAIL_OPTS: -Dgreenmail.setup.test.all -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.auth.disabled
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-project
       - name: Wait for GreenMail IMAP (127.0.0.1:3143)
         run: |
@@ -105,6 +114,9 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/setup-project
       - name: Install pass + gnupg (E2E)
         run: |

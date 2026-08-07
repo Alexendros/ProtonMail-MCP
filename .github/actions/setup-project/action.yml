@@ -1,16 +1,15 @@
 # ---------------------------------------------------------------------------
 # Setup project — composite action
 #
-# DRY de los 4 steps repetidos en ci.yml, quality.yml (knip), integration.yml
-# y coverage-badge.yml: checkout + setup-node + pnpm/action-setup + install.
+# DRY: setup-node + pnpm/action-setup + install. Cada job debe hacer
+# checkout ANTES de usar este composite action (GitHub no puede ejecutar
+# un action local si no está primero en el workspace).
 #
-# Security posture: NO pnpm store cache. El repo deliberadamente evita caching
-# (zizmor `cache-poisoning` en PRs de fork + postura de supply-chain en
-# release.yml). Se mantiene sin cache aquí para no introducir regressions.
+# Security posture: NO pnpm store cache (zizmor cache-poisoning + supply-chain).
 # Renovate (github-actions manager) mantiene actualizados los SHAs pinneados.
 # ---------------------------------------------------------------------------
 name: Setup project
-description: Checkout, set up Node.js + pnpm, install dependencies (frozen lockfile).
+description: Set up Node.js + pnpm + install dependencies. Requires prior checkout.
 
 inputs:
   node-version:
@@ -29,11 +28,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        persist-credentials: false
-
     - name: Setup Node.js
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
       with:
