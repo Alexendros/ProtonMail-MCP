@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Setup project — composite action
+#
+# DRY: setup-node + pnpm/action-setup + install. Cada job debe hacer
+# checkout ANTES de usar este composite action (GitHub no puede ejecutar
+# un action local si no está primero en el workspace).
+#
+# Security posture: NO pnpm store cache (zizmor cache-poisoning + supply-chain).
+# Renovate (github-actions manager) mantiene actualizados los SHAs pinneados.
+# ---------------------------------------------------------------------------
+name: Setup project
+description: Set up Node.js + pnpm + install dependencies. Requires prior checkout.
+
+inputs:
+  node-version:
+    description: Node.js version to set up.
+    required: false
+    default: "22"
+  pnpm-version:
+    description: pnpm version ('latest' by default).
+    required: false
+    default: "latest"
+  install-args:
+    description: Extra args for `pnpm install` (e.g. --frozen-lockfile).
+    required: false
+    default: "--frozen-lockfile"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install ${{ inputs.install-args }}
