@@ -7,7 +7,9 @@
     "docs/adr/**",
     ".freebuff/**",
     ".commandcode/**",
-    "specs/**"
+    "specs/**",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/ISSUE_TEMPLATE/**"
   ],
   "config": {
     "default": true,
@@ -15,8 +17,6 @@
     "MD034": false,
     "MD060": false,
     "MD040": false,
-    "MD032": false,
-    "MD038": false,
-    "MD056": false
+    "MD041": false
   }
 }
