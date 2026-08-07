@@ -1,6 +1,6 @@
 {
   "name": "@alexendros/protonsuite-agent",
-  "private": true,
+  "private": false,
   "version": "1.2.1",
   "mcpName": "io.github.Alexendros/protonsuite-agent",
   "description": "Agente Proton Suite con MCP server embebido: Mail (Bridge IMAP/SMTP), Pass (pass-cli), Calendar y Drive — 14+ tools, auto-configuración, organización inteligente y alertas de seguridad.",
