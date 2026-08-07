@@ -107,7 +107,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.4.1",
-    "imapflow": "^1.4.7",
+    "imapflow": "^1.6.6",
     "mailparser": "^3.9.12",
     "nodemailer": "^9.0.3",
     "zod": "^4.3.6"
