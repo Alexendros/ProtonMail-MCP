@@ -1,3 +1,5 @@
 # Exclusiones para el checker de enlaces lychee.
 # npm devuelve 403 a bots/CI sin sesión; el badge/package link es correcto.
-https://www.npmjs.com/package/@alexendros/protonmail-agent
+https://www.npmjs.com/package/@alexendros/protonsuite-agent
+# GitHub release URLs may require auth in CI
+https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases
