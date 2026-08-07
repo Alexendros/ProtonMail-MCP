@@ -58,8 +58,7 @@ cat > "$BADGE_FILE" <<EOF
   "label": "coverage",
   "message": "${PCT}%",
   "color": "${COLOR}",
-  "logo": "vitest",
-  "logoColor": "white"
+  "logo": "vitest"
 }
 EOF
 echo "✅ $BADGE_FILE generated: ${PCT}% (${COLOR})"

@@ -3,8 +3,6 @@ name: Release
 on:
   push:
     branches: [main]
-    tags:
-      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -16,22 +14,47 @@ concurrency:
 
 jobs:
   # ────────────────────────────────────────────────────────────────────
-  # semantic-release — análisis de commits → bump, changelog, tag, GitHub release
-  # Solo se ejecuta en push a main (no en tags ni PR).
+  # Verificación previa — typecheck + test + build
+  # ────────────────────────────────────────────────────────────────────
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          version: latest
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run typecheck
+      - run: pnpm test
+      - run: pnpm run build
+
+  # ────────────────────────────────────────────────────────────────────
+  # semantic-release — bump, changelog, tag, GitHub release
   # ────────────────────────────────────────────────────────────────────
   semantic-release:
     name: Semantic Release
-    if: github.ref == 'refs/heads/main'
-    needs: [verify-light]
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
       id-token: write
+    outputs:
+      new-release-published: ${{ steps.release.outputs.new_release_published }}
+      new-release-version: ${{ steps.release.outputs.new_release_version }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
@@ -54,9 +77,6 @@ jobs:
         if: success()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          TAG="v${VERSION}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -71,51 +91,43 @@ jobs:
             echo "No release artifacts to commit (${TAG})"
           fi
   # ────────────────────────────────────────────────────────────────────
-  # Gate semver previo · solo aplica a tags. En push a main pasa-through.
-  # Lib en plantillas (Pipelines 2026-05).
+  # Publicación a npm · SOLO tras release exitoso.
+  # Auth: TRUSTED PUBLISHING (OIDC) — sin NPM_TOKEN.
   # ────────────────────────────────────────────────────────────────────
-  gate-semver:
-    name: Validar SemVer (tags)
-    if: startsWith(github.ref, 'refs/tags/v')
-    uses: Iniciativas-Alexendros/plantillas/.github/workflows/_lib-gate-semver.yml@main
-    with:
-      ref: ${{ github.ref_name }}
-      require-stable: false
-
-  # ────────────────────────────────────────────────────────────────────
-  # Verificación ligera previa al push (defensa en profundidad).
-  # Solo en push a main; en tags ya se asume que main pasó CI.
-  # ────────────────────────────────────────────────────────────────────
-  verify-light:
-    name: Verify (Node 22 · pre-publish)
-    if: github.ref == 'refs/heads/main'
+  publish-npm:
+    name: Publish to npm
+    needs: semantic-release
+    if: needs.semantic-release.outputs.new-release-published == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 22
-      # Sin pnpm cache a propósito (pre-publish): restaurar una cache
-      # comprometida podría envenenar la cadena de suministro previa al push.
+      # Trusted publishing requiere npm >= 11.5.1; los runners traen 10.x
+      - name: Upgrade npm (OIDC trusted publishing)
+        run: npm install -g npm@latest
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           version: latest
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run typecheck
-      - run: pnpm test
       - run: pnpm run build
+      - name: Publish (OIDC trusted publishing + provenance)
+        run: npm publish --provenance --access public
 
-  publish:
+  # ────────────────────────────────────────────────────────────────────
+  # Publicación a GHCR · multi-tag en push a main
+  # ────────────────────────────────────────────────────────────────────
+  publish-ghcr:
     name: Build & push to GHCR
-    needs: [gate-semver, verify-light]
-    if: |
-      always() &&
-      (needs.gate-semver.result == 'success' || needs.gate-semver.result == 'skipped') &&
-      (needs.verify-light.result == 'success' || needs.verify-light.result == 'skipped') &&
-      (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [verify, semantic-release]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -123,31 +135,26 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          fetch-depth: 0
           persist-credentials: false
-
       - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
-
       - name: Login to GHCR
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=ref,event=branch
             type=sha,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || needs.gate-semver.outputs.is-stable == 'true' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-
       - name: Build & push
-        id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
@@ -157,84 +164,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: true
-
-      - name: Deploy webhook (optional)
-        # Envía un webhook configurable tras CI verde. Configurar los secrets
-        # correspondientes en la org. No-fatal: si no hay secret configurado,
-        # no hace nada (no rompe el release).
-        if: github.ref == 'refs/heads/main'
-        env:
-          WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-        run: |
-          set -o pipefail
-          if [ -n "$WEBHOOK_URL" ]; then
-            curl -fsSL -X POST "$WEBHOOK_URL" || echo "deploy webhook ping failed (non-fatal)"
-          else
-            echo "Deploy webhook no configurado — se omite."
-          fi
-
-      - name: Job summary
-        if: always()
-        uses: Iniciativas-Alexendros/plantillas/.github/actions/job-summary@main
-        with:
-          title: 'Release · ${{ github.ref_name }}'
-          status: ${{ job.status }}
-          items: |
-            trigger=info=${{ github.event_name }} · ${{ github.ref }}
-            verify-light=${{ needs.verify-light.result == 'success' && 'ok' || (needs.verify-light.result == 'skipped' && 'info' || 'fail') }}=${{ needs.verify-light.result }}
-            semver-gate=${{ needs.gate-semver.result == 'success' && 'ok' || (needs.gate-semver.result == 'skipped' && 'info' || 'fail') }}=${{ needs.gate-semver.result }} (stable=${{ needs.gate-semver.outputs.is-stable }})
-            docker=${{ steps.build.outcome == 'success' && 'ok' || 'fail' }}=push=true
-          notes: |
-            Registry: ghcr.io/${{ github.repository }}.
-            `latest` se actualiza en push a main O tag estable (no pre-release).
-
-  # ────────────────────────────────────────────────────────────────────
-  # Publicación a npm · SOLO en tags vX.Y.Z. Asegura que el paquete publicado
-  # coincide con el código fuente en el repo.
-  #
-  # Auth: TRUSTED PUBLISHING (OIDC) — sin NPM_TOKEN. El `id-token: write` deja
-  # que npm intercambie el token OIDC de GitHub Actions por credenciales de
-  # publicación efímeras. Requiere configurar el trusted publisher en
-  # npmjs.com (paquete → Settings → Trusted publisher: repo
-  # Iniciativas-Alexendros/agent-protonsuite, workflow release.yml).
-  # La provenance se genera automáticamente.
-  # ────────────────────────────────────────────────────────────────────
-  publish-npm:
-    name: Publish to npm
-    needs: [gate-semver]
-    if: |
-      startsWith(github.ref, 'refs/tags/v') &&
-      needs.gate-semver.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      # Sin `cache: npm` a propósito: en un job que PUBLICA artefactos, restaurar
-      # una cache podría envenenar el paquete publicado. El caching está
-      # deshabilitado (no hay input `cache`), así que el ignore solo silencia el
-      # heurístico de zizmor que marca setup-node por defecto en jobs de release.
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6 # zizmor: ignore[cache-poisoning]
-        with:
-          node-version: 22
-      # Trusted publishing (OIDC) requiere npm >= 11.5.1; los runners traen 10.x.
-      - name: Upgrade npm (OIDC trusted publishing needs >= 11.5.1)
-        run: npm install -g npm@latest
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: latest
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - name: Verify tag matches package.json version
-        run: |
-          PKG_VERSION="v$(node -p "require('./package.json').version")"
-          if [ "$PKG_VERSION" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} != package.json ${PKG_VERSION}"; exit 1
-          fi
-      # Sin NODE_AUTH_TOKEN: la autenticación es OIDC (trusted publisher).
-      # Provenance automática. `--access public` por ser paquete con scope.
-      - name: Publish (OIDC trusted publishing + provenance)
-        run: npm publish --provenance --access public
