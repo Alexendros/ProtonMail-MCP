@@ -36,16 +36,16 @@ describe("Drive E2E · staging real", () => {
     expect(st.stagingFiles).toBeGreaterThanOrEqual(5);
   });
 
-  it("audit detects obsolete formats", () => {
+  it("audit detects obsolete formats", async () => {
     const auditor = new DriveAuditor([".doc"], silentLog);
-    const report = auditor.formatReport(STAGING_DIR);
+    const report = await auditor.formatReport(STAGING_DIR);
     expect(report.obsoleteFiles.length).toBeGreaterThanOrEqual(1);
     expect(report.obsoleteFiles.some((f) => f.ext === ".doc")).toBe(true);
   });
 
-  it("audit detects duplicates", () => {
+  it("audit detects duplicates", async () => {
     const auditor = new DriveAuditor([".doc"], silentLog);
-    const dups = auditor.findDuplicates(STAGING_DIR);
+    const dups = await auditor.findDuplicates(STAGING_DIR);
     expect(dups.length).toBeGreaterThanOrEqual(1);
     const txtDup = dups.find((d) =>
       d.files.some((f) => f.name.includes("duplicate")),
@@ -54,9 +54,9 @@ describe("Drive E2E · staging real", () => {
     expect(txtDup!.files.length).toBe(2);
   });
 
-  it("inventory reports file counts by extension", () => {
+  it("inventory reports file counts by extension", async () => {
     const auditor = new DriveAuditor([".doc"], silentLog);
-    const inv = auditor.scanInventory(STAGING_DIR);
+    const inv = await auditor.scanInventory(STAGING_DIR);
     expect(inv.totalFiles).toBeGreaterThanOrEqual(5);
     expect(inv.byExt[".csv"]).toBe(1);
     expect(inv.byExt[".doc"]).toBe(1);

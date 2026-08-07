@@ -4,7 +4,7 @@ Plan a alto nivel. No son compromisos firmes; las prioridades pueden cambiar seg
 
 ## Estado actual
 
-`v0.7.0` — Profesionalización y estandarización. ESLint flat config, commitlint + Husky, Knip, lint-staged, semantic-release, Renovate config, estandarización de CI/CD.
+`v1.2.1` — Architecture improvement: documentación, observabilidad, contract tests y CalDAV seam.
 
 ## Completado
 
@@ -30,13 +30,41 @@ Plan a alto nivel. No son compromisos firmes; las prioridades pueden cambiar seg
 - [x] CI: paso de lint en ci.yml, paso de knip en quality.yml, semantic-release en release.yml.
 - [x] Estandarización de scripts npm (`lint`, `lint:fix`, `knip`, `prepare`).
 
+### v1.0.0 — Architecture improvement (docs, observabilidad, contract tests, CalDAV seam)
+
+**Phase 1 — Documentación y decisiones:**
+
+- [x] `AGENTS.md` (especificación agents.md para contexto de agentes IA).
+- [x] ADRs: `docs/adr/0002` (transport dual stdio/http), `0003` (ports & adapters), `0004` (config validation + dry-run guardrail), `0005` (CalDAV stub — dependencia Proton).
+- [x] Documentación de API generada: `scripts/generate-docs.mjs` → `docs/api/mcp-tools.md` (50 tools, validado por CI).
+- [x] `ARCHITECTURE.md` actualizado con referencias a ADRs.
+
+**Phase 2 — Observabilidad:**
+
+- [x] Endpoint `/metrics` (Prometheus-style) detrás de bearer auth en `src/http.ts`.
+- [x] Instrumentación de requests/sesiones MCP vía `src/utils/metrics.ts`.
+- [x] Tests de métricas (`tests/utils/metrics.test.ts`, `tests/http-transport.test.ts`).
+
+**Phase 3 — Contract tests + CalDAV seam:**
+
+- [x] Suite de contract tests (`tests/contract/`): valida la superficie MCP real vía HTTP/SSE (`buildHttpApp` + supertest), no introspección estática.
+- [x] Golden set de 50 tools (nombres, `title`, `description`, `inputSchema`, `readOnlyHint`/`openWorldHint`).
+- [x] Snapshot determinista de esquemas JSON por tool (`tool-catalog.snap`).
+- [x] CI gate: "Contract tests (MCP tool surface)" en `ci.yml`, script `test:contract`.
+- [x] `ICalendarAdapter` port en `src/clients/interfaces.ts` (interfaz solamente — CalDAV bloqueado por Proton Bridge; ver ADR-005).
+
+**Infraestructura (corte transversal):**
+
+- [x] Capa de ports hexagonal: `IImapClient`, `ISmtpClient`, `IDriveClient`, `IPassClient`, `ICalendarAdapter` en `src/clients/interfaces.ts`.
+- [x] Pre-commit local: `.husky/pre-commit` → `lint-staged` (eslint --fix src) + typecheck + test suite (934 tests, 98% cobertura).
+- [x] Refactor en progreso: `src/server.ts` → `src/server/{bridge,mail,pass,drive,suite,ecosystem,agent}.ts` (extractores por dominio).
+
 ## Pendiente · prioridad alta
 
-- [ ] **Calendar MVP:** cliente CalDAV real cuando Bridge lo exponga, tools `proton_calendar_list_events/create_event`.
+- [ ] **Calendar MVP:** cliente CalDAV real cuando Bridge lo exponga, tools `proton_calendar_list_events/create_event`. (Interfaz `ICalendarAdapter` lista en `src/clients/interfaces.ts`; ver ADR-005.)
 - [ ] **Drive MVP:** integración OAuth, tools `proton_drive_list_files/upload/download/share`.
 - [ ] **Pass CLI backend alternativo:** soporte para `gopass` como drop-in con `GOPASS_STORE_DIR`.
 - [ ] **Agente multi-pass:** goal `pass-audit` con reporte de fortaleza y rotación programada.
-- [ ] **E2E para Pass:** tests de integración con un password store de prueba (gpg mock o temp dir).
 - [ ] **Docker compose multi-producto:** servicio de `gopass` o `pass` en el compose para Pass.
 
 ## Pendiente · prioridad media

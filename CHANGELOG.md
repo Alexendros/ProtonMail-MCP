@@ -12,14 +12,51 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) y [Sem
 - **coverage-badge:** remove unsupported `logoColor` property from shields.io endpoint
 - **release:** restore proper semantic-release flow without manual CHANGELOG/tag step
 
+- **ICalendarAdapter port** in `src/clients/interfaces.ts` (CalDAV seam, interface only — blocked per ADR-005).
+- **Contract tests** (`tests/contract/`): validates live MCP tool surface via HTTP/SSE (approach A), 50-tool golden set, deterministic JSON Schema snapshot (`tool-catalog.snap`).
+- **Observability**: Prometheus-style `/metrics` endpoint (bearer auth), MCP request/session instrumentation (`src/utils/metrics.ts`).
+
 ### Changed
 
-- **workflows:** simplify release.yml with verify → semantic-release → publish pattern
-- **package.json:** sync version to 1.2.1 (catch-up with latest tag)
+- **Pre-commit** mirrors CI: `.husky/pre-commit` → lint-staged (eslint --fix on src) + typecheck + test suite (934 tests, 98% coverage).
+- **ROADMAP.md** updated to v1.2.1.
+- **TASKS.md** removed (stale, referenced non-existent worktree).
+
+### Fixed
+
+- **E2E drive tests**: `await` missing on async `DriveAuditor` calls in `tests/e2e/drive.e2e.ts`.
+- **`.lintstagedrc.json`**: scope from `*.ts` (included tests) to `src/**/*.ts` (CI-aligned).
 
 ## [1.2.1] - 2026-07-20
 
-### Bug Fixes
+### Fixed
+
+- Restore truncated `agent.test.ts` after merge conflict.
+
+## [1.2.0] - 2026-07-20
+
+### Added
+
+- **Branch Hunt 2** + ESLint `off→warn` bajo riesgo (coverage improvement).
+
+## [1.1.0] - 2026-07-19
+
+### Changed
+
+- **TypeScript strict flags**: enabled `noImplicitOverride` + `exactOptionalPropertyTypes` in tsconfig.
+
+## [1.0.1] - 2026-07-17
+
+## [1.2.1] - 2026-07-20
+
+- SHA-256 hash for Pass duplicate detection, `--force` on insert/generate.
+- `fs.readdir` for Pass `list()`, reject `..` paths, fix e2e path.
+
+## [1.0.0] - 2026-07-12
+
+### BREAKING
+
+- **Rebrand a Proton Suite Agent v1.0.0**: el proyecto abarca Mail, Pass, Calendar y Drive. Package renombrado a `@alexendros/protonsuite-agent`, binarios `protonsuite-*`, repo `agent-protonsuite`. Commit BREAKING CHANGE desde v0.5.0 → bump semver major a v1.0.0.
 
 * restore truncated agent.test.ts after merge conflict
 
@@ -195,24 +232,30 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) y [Sem
 
 ### Added
 
-- Initial public release
-- 13 MCP tools across 4 capability areas
-- Dual transport: stdio + streamable HTTP
-- Express middleware: rate limiting + CORS + Bearer auth
-- `outputSchema` y `structuredContent` on all tools
-- Governance bundle: README badges, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md
-- Dockerfile + docker-compose.yml
-- Vitest test setup with supertest
+- Initial public release on npm under canonical scope `@alexendros/proton-mail-mcp`.
+- Full rename from `@alexendros/protonmail-mcp` → `@alexendros/proton-mail-mcp` (kebab-case alignment per Proton brand).
+- 13 MCP tools across 4 capability areas: search/list/read/move/flag/delete emails, send mail with attachments, list folders, get attachments.
+- Dual transport: stdio (for Claude Desktop / CLI) + streamable HTTP (for claude.ai Routines / SDK).
+- Express middleware: rate limiting + CORS + Bearer auth on HTTP transport.
+- `outputSchema` and `structuredContent` on all tools (MCP spec 2025-06-18).
+- Read-only annotation hint on `proton_get_email`.
+- Governance bundle: README badges, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, GitHub issue templates (bug-report.yml, feature-request.yml).
+- Dockerfile + docker-compose.yml for self-hosted deployments.
+- Smoke test script (`scripts/smoke.sh`).
+- Vitest test setup with supertest for HTTP route coverage.
+
+### Deprecated
+
+- `@alexendros/protonmail-mcp` (old npm name) deprecated with `npm deprecate` pointing to the new package.
 
 [Unreleased]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v1.2.1...HEAD
-[1.2.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v1.2.0...v1.2.1
-[1.2.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v1.0.1...v1.1.0
-[1.0.1]: https://github.com/Iniciativas-Alexendros/agent-protonmail/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/Iniciativas-Alexendros/agent-protonmail/compare/v0.4.0...v1.0.0
-[0.8.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/compare/v0.5.0...v0.7.0
-[0.5.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/compare/v0.4.0...v0.5.0
+[1.2.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.2.1
+[1.2.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.2.0
+[1.1.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.1.0
+[1.0.1]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.0.1
+[1.0.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v1.0.0
+[0.7.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.7.0
+[0.5.0]: https://github.com/Iniciativas-Alexendros/agent-protonsuite/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.4.0
 [0.2.0]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.2.0
 [0.1.2]: https://github.com/Iniciativas-Alexendros/protonmailbrige-mcptool/releases/tag/v0.1.2

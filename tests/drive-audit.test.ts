@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { DriveAuditor } from '../src/drive-audit.js'
+import { hashFile } from '../src/drive-utils.js'
 
 const TMP = '/tmp/test-drive-audit'
 
@@ -28,8 +29,8 @@ describe('DriveAuditor', () => {
     error: () => {},
   })
 
-  it('should scan inventory', () => {
-    const inv = auditor.scanInventory(TMP)
+  it('should scan inventory', async () => {
+    const inv = await auditor.scanInventory(TMP)
     expect(inv.totalFiles).toBe(6)
     expect(inv.totalBytes).toBeGreaterThan(0)
     expect(inv.byExt['.md']).toBe(1)
@@ -38,48 +39,46 @@ describe('DriveAuditor', () => {
     expect(inv.byExt['.jpg']).toBe(1)
   })
 
-  it('should detect duplicates by content', () => {
-    const dups = auditor.findDuplicates(TMP)
+  it('should detect duplicates by content', async () => {
+    const dups = await auditor.findDuplicates(TMP)
     expect(dups.length).toBeGreaterThanOrEqual(1)
     const dup = dups.find(
-      (d) => d.hash === auditor.hashFile(resolve(TMP, 'duplicate.txt')),
+      (d) => d.hash === hashFile(resolve(TMP, 'duplicate.txt')),
     )
     expect(dup).toBeDefined()
     expect(dup!.files.length).toBe(2)
   })
 
-  it('should report obsolete formats', () => {
-    const fmt = auditor.formatReport(TMP)
+  it('should report obsolete formats', async () => {
+    const fmt = await auditor.formatReport(TMP)
     expect(fmt.obsoleteFiles.length).toBe(1)
     expect(fmt.obsoleteFiles[0].name).toBe('report.doc')
     expect(fmt.obsoleteExtensions).toEqual(['.doc', '.ppt', '.xls', '.bmp'])
   })
 
-  it('should build organize plan', () => {
-    const plan = auditor.buildOrganizePlan(TMP)
+  it('should build organize plan', async () => {
+    const plan = await auditor.buildOrganizePlan(TMP)
     expect(plan.suggestions.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('skips entries when statSync fails in scanInventory (broken symlink)', () => {
+  it('skips entries when stat fails in scanInventory (broken symlink)', async () => {
     try {
       symlinkSync('/nonexistent', resolve(TMP, 'broken.lnk'))
     } catch { /* platform may not support symlinks, skip test */
       return
     }
-    const inv = auditor.scanInventory(TMP)
-    // CI runner puede tener /nonexistent como directorio real — validamos
-    // que el symlink en sí no aparezca en inventory, no el conteo exacto.
+    const inv = await auditor.scanInventory(TMP)
     const found = inv.files.find((f) => f.name === 'broken.lnk')
     expect(found).toBeUndefined()
   })
 
-  it('skips entries when statSync fails in findDuplicates (broken symlink)', () => {
+  it('skips entries when stat fails in findDuplicates (broken symlink)', async () => {
     try {
       symlinkSync('/nonexistent', resolve(TMP, 'broken2.lnk'))
     } catch { /* platform may not support symlinks, skip test */
       return
     }
-    const dups = auditor.findDuplicates(TMP)
+    const dups = await auditor.findDuplicates(TMP)
     expect(Array.isArray(dups)).toBe(true)
   })
 })

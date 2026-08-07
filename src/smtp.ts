@@ -12,8 +12,10 @@
  */
 import nodemailer, { type Transporter } from 'nodemailer'
 import { addrMatches, extractEmail } from './addresses.js'
+import type { IImapClient } from './clients/interfaces.js'
 import type { ResolvedBridgeConfig } from './config.js'
-import type { EmailFull, ImapClient } from './imap.js'
+import { SMTP_POOL_MAX_CONNECTIONS, SMTP_POOL_MAX_MESSAGES } from './constants.js'
+import type { EmailFull } from './imap.js'
 
 // Re-export para consumidores históricos (tests/smtp-helpers.test.ts) que los
 // importaban desde aquí antes de consolidarlos en addresses.ts.
@@ -66,8 +68,8 @@ export class SmtpClient {
       tls: { rejectUnauthorized: !this.cfg.tlsInsecure },
       auth: { user: this.cfg.user, pass: resolvedPass },
       pool: true,
-      maxConnections: 2,
-      maxMessages: 50,
+      maxConnections: SMTP_POOL_MAX_CONNECTIONS,
+      maxMessages: SMTP_POOL_MAX_MESSAGES,
     })
     return this.transporter
   }
@@ -116,6 +118,16 @@ export class SmtpClient {
 // Reply / Forward helpers: fetch original and build proper threaded send opts
 // -----------------------------------------------------------------------------
 
+export interface BuildReplyOptions {
+  imap: IImapClient
+  mailbox: string
+  uid: number
+  body: { text?: string; html?: string }
+  includeQuote: boolean
+  replyAll: boolean
+  ownAddress: string
+}
+
 /**
  * Construye un `SendOptions` para responder a un mensaje preservando hilo.
  *
@@ -125,14 +137,9 @@ export class SmtpClient {
  * ya incluidos en `to` (evita duplicados en el mismo correo).
  */
 export async function buildReplyOptions(
-  imap: ImapClient,
-  mailbox: string,
-  uid: number,
-  body: { text?: string; html?: string },
-  includeQuote: boolean,
-  replyAll: boolean,
-  ownAddress: string,
+  opts: BuildReplyOptions,
 ): Promise<SendOptions | null> {
+  const { imap, mailbox, uid, body, includeQuote, replyAll, ownAddress } = opts
   const original = await imap.getEmail(mailbox, uid)
   if (!original) return null
 
@@ -164,7 +171,7 @@ export async function buildReplyOptions(
 }
 
 export async function buildForwardOptions(
-  imap: ImapClient,
+  imap: IImapClient,
   mailbox: string,
   uid: number,
   to: string[],

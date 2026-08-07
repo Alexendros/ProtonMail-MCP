@@ -34,6 +34,7 @@ import {
   addressesToArray,
 } from './addresses.js'
 import type { ResolvedBridgeConfig } from './config.js'
+import { IMAP_MAX_RETRIES, IMAP_RETRY_BASE_MS, IMAP_MAX_IDLE_MS } from './constants.js'
 
 export interface EmailSummary {
   uid: number
@@ -119,9 +120,8 @@ export class ImapClient {
           this.log.error('imapflow', obj)
         },
       },
-      // Bridge soporta IDLE. 60s de keepalive = Bridge no nos tira por idle
-      // timeout y nosotros no pagamos el coste de reconectar.
-      maxIdleTime: 60_000,
+      // Bridge soporta IDLE. Keepalive configurado vía constantes.
+      maxIdleTime: IMAP_MAX_IDLE_MS,
     }
   }
 
@@ -156,7 +156,7 @@ export class ImapClient {
    * devuelve error al modelo, que lo interpreta como "tool no disponible".
    */
   private async connectWithRetry(): Promise<ImapFlow> {
-    const maxAttempts = 3
+    const maxAttempts = IMAP_MAX_RETRIES
     let lastErr: unknown
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -183,7 +183,7 @@ export class ImapClient {
           message: (err as Error).message,
         })
         if (attempt < maxAttempts) {
-          await new Promise((r) => setTimeout(r, 500 * 2 ** (attempt - 1)))
+          await new Promise((r) => setTimeout(r, IMAP_RETRY_BASE_MS * 2 ** (attempt - 1)))
         }
       }
     }

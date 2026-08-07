@@ -1,8 +1,8 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
+import type { IImapClient } from '../clients/interfaces.js'
+import type { ISmtpClient } from '../clients/interfaces.js'
 import type { createLogger, Config } from '../config.js'
-import type { ImapClient } from '../imap.js'
-import type { SmtpClient } from '../smtp.js'
 import { buildForwardOptions, buildReplyOptions } from '../smtp.js'
 import {
   attachmentSchema,
@@ -24,8 +24,8 @@ type Logger = ReturnType<typeof createLogger>
 interface MailDeps {
   cfg: Config
   log: Logger
-  imap: ImapClient
-  smtp: SmtpClient
+  imap: IImapClient
+  smtp: ISmtpClient
 }
 
 export function registerMailTools(server: McpServer, deps: MailDeps) {
@@ -283,7 +283,7 @@ async function handleSearchEmails(
   const criteria = buildSearchCriteria(args)
   const { items, matched } = await imap.searchEmails(
     args.mailbox,
-    criteria,
+    criteria as Record<string, unknown>,
     args.limit,
   )
   const structured = {
@@ -545,18 +545,18 @@ function registerSendTools(server: McpServer, deps: MailDeps) {
           ],
         }
       }
-      const opts = await buildReplyOptions(
+      const opts = await buildReplyOptions({
         imap,
-        args.mailbox,
-        args.uid,
-        {
+        mailbox: args.mailbox,
+        uid: args.uid,
+        body: {
           ...(args.text !== undefined ? { text: args.text } : {}),
           ...(args.html !== undefined ? { html: args.html } : {}),
         },
-        args.include_quote,
-        args.reply_all,
-        cfg.products.mail.bridge.from,
-      )
+        includeQuote: args.include_quote,
+        replyAll: args.reply_all,
+        ownAddress: cfg.products.mail.bridge.from,
+      })
       if (!opts)
         return {
           isError: true,

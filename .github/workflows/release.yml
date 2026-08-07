@@ -64,11 +64,32 @@ jobs:
           version: latest
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
-      - id: release
-        run: npx semantic-release
+      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
+      # semantic-release actualiza CHANGELOG.md y package.json version en el
+      # working directory (via @semantic-release/changelog y @semantic-release/npm).
+      # Los tags y releases de GitHub los gestiona @semantic-release/github vía API.
+      # Este step commitea los artefactos actualizados de vuelta a main.
+      - name: Commit CHANGELOG and version bump to main
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+
+          git add CHANGELOG.md package.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): ${TAG} [skip ci]"
+            git push origin HEAD:main
+            echo "Committed and pushed ${TAG} release artifacts to main"
+          else
+            echo "No release artifacts to commit (${TAG})"
+          fi
   # ────────────────────────────────────────────────────────────────────
   # Publicación a npm · SOLO tras release exitoso.
   # Auth: TRUSTED PUBLISHING (OIDC) — sin NPM_TOKEN.
