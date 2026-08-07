@@ -1,0 +1,4 @@
+# actionlint configuration
+ignore:
+  - integration.yml  # Uses secrets context - out of scope for this repo
+  - ci.yml  # shellcheck warnings are false positives in our context
