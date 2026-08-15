@@ -30,7 +30,7 @@ export const silentLog: ContractLogger = {
 
 export const AUTH_TOKEN = "expected-token";
 
-/** Config válida que habilita TODOS los productos → 50 tools registradas. */
+/** Config válida que habilita productos activos → 47 tools por defecto. */
 export function makeContractCfg(overrides?: Partial<Config>): Config {
   return {
     products: {
@@ -48,7 +48,7 @@ export function makeContractCfg(overrides?: Partial<Config>): Config {
         },
       },
       pass: { enabled: true, storeDir: "/tmp/test-pass-contract" },
-      calendar: { enabled: true },
+      calendar: { enabled: true, experimental: false },
       drive: {
         enabled: true,
         cliBin: "proton-drive",
@@ -83,10 +83,10 @@ export interface ClientTool {
 
 /**
  * App Express de test: `buildServer` real con todos los products → registra
- * las 50 tools. Los adapters están mockeados en cada test file.
+ * las 47 tools por defecto (50 con Calendar experimental). Los adapters están mockeados en cada test file.
  */
-export function buildContractApp(): Express {
-  const cfg = makeContractCfg();
+export function buildContractApp(cfgOverrides?: Partial<Config>): Express {
+  const cfg = makeContractCfg(cfgOverrides);
   return buildHttpApp({
     buildServer: () => buildServer(cfg, silentLog).server,
     cfg,
@@ -127,8 +127,10 @@ function parseSSE(text: string): unknown[] {
  * Supertest: `initialize` → captura session id → `tools/list`. Parsea la
  * respuesta SSE y devuelve las `tools` client-facing (con inputSchema JSON).
  */
-export async function listContractTools(): Promise<ClientTool[]> {
-  const app = buildContractApp();
+export async function listContractTools(
+  cfgOverrides?: Partial<Config>,
+): Promise<ClientTool[]> {
+  const app = buildContractApp(cfgOverrides);
   const initRes = await request(app)
     .post("/mcp")
     .set("Authorization", `Bearer ${AUTH_TOKEN}`)

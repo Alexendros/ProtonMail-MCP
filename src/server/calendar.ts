@@ -9,9 +9,14 @@ type Logger = ReturnType<typeof createLogger>
 
 export function registerCalendarTools(
   server: McpServer,
-  deps: { log: Logger; enabled: boolean },
+  deps: { log: Logger; enabled: boolean; experimental: boolean },
 ) {
   if (!deps.enabled) return
+
+  if (!deps.experimental) {
+    deps.log.warn('Calendar tools are experimental — set PROTON_CALENDAR_EXPERIMENTAL=1 to enable.')
+    return
+  }
 
   deps.log.warn('Calendar tools are stubs — Proton Calendar uses E2E-encrypted sync, not CalDAV.')
 

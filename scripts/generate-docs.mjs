@@ -45,6 +45,7 @@ process.env.ALERT_LOG_DIR = resolve(tmpdir(), 'proton-docs-gen-alerts')
 process.env.DRIVE_ENABLED = 'true'
 process.env.DRIVE_STAGING_DIR = resolve(tmpdir(), 'proton-docs-gen-drive')
 process.env.PROTON_CALENDAR_ENABLED = 'true'
+process.env.PROTON_CALENDAR_EXPERIMENTAL = 'true'
 process.env.AGENT_DRY_RUN = 'true'
 process.env.LOG_LEVEL = 'error'
 
@@ -78,7 +79,13 @@ runGroup('Mail', () =>
   registerMailTools(fakeServer, { cfg, log, imap: mockImap, smtp: mockSmtp }),
 )
 runGroup('Pass', () => registerPassTools(fakeServer, { cfg, log }))
-runGroup('Calendar', () => registerCalendarTools(fakeServer, { log, enabled: true }))
+runGroup('Calendar', () =>
+  registerCalendarTools(fakeServer, {
+    log,
+    enabled: true,
+    experimental: true,
+  }),
+)
 runGroup('Drive', () =>
   registerDriveTools(fakeServer, { cfg, log, driveClient: mockDrive }),
 )

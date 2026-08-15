@@ -36,6 +36,7 @@ const imapState = {
   connectAttempts: 0,
   connectFailUntil: 0, // connect() lanza mientras attempts <= este valor
   connectErrorMessage: 'ECONNREFUSED', // mensaje que lanza connect() al fallar
+  listCalls: 0,
   // Palancas de error por método
   listShouldThrow: false,
   statusShouldThrow: false,
@@ -63,6 +64,7 @@ vi.mock('imapflow', () => {
     list() {
       if (imapState.listShouldThrow)
         throw new Error('LIST failed: connection dropped')
+      imapState.listCalls += 1
       return imapState.listResult
     }
     mailboxCreate() {
@@ -214,6 +216,7 @@ beforeEach(() => {
   imapState.connectAttempts = 0
   imapState.connectFailUntil = 0
   imapState.connectErrorMessage = 'ECONNREFUSED'
+  imapState.listCalls = 0
   imapState.listShouldThrow = false
   imapState.statusShouldThrow = false
   imapState.searchShouldThrow = false
@@ -417,6 +420,21 @@ describe('ImapClient · listMailboxes', () => {
     imapState.listShouldThrow = true
     const c = makeClient()
     await expect(c.listMailboxes()).rejects.toThrow(/LIST failed/)
+  })
+
+  it('caches listMailboxes within TTL and skips second list()', async () => {
+    const c = makeClient()
+    await c.listMailboxes()
+    await c.listMailboxes()
+    expect(imapState.listCalls).toBe(1)
+  })
+
+  it('invalidates mailbox list cache after createMailbox', async () => {
+    const c = makeClient()
+    await c.listMailboxes()
+    await c.createMailbox('New')
+    await c.listMailboxes()
+    expect(imapState.listCalls).toBe(2)
   })
 })
 

@@ -11,13 +11,16 @@ import { z } from 'zod'
 // ---------------------------------------------------------------------------
 export const CalendarConfigSchema = z.object({
   enabled: z.boolean().default(false),
+  experimental: z.boolean().default(false),
 })
 
 export type CalendarConfig = z.infer<typeof CalendarConfigSchema>
 
 /** Parsea Calendar config desde env vars. */
 export function parseCalendarConfig(env: NodeJS.ProcessEnv) {
+  const truthy = (v: string | undefined) => v === 'true' || v === '1'
   return {
-    enabled: (env['PROTON_CALENDAR_ENABLED'] ?? 'false') === 'true',
+    enabled: truthy(env['PROTON_CALENDAR_ENABLED']),
+    experimental: truthy(env['PROTON_CALENDAR_EXPERIMENTAL']),
   }
 }

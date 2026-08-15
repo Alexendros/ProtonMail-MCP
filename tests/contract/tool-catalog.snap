@@ -91,9 +91,11 @@
         },
         "response_format": {
           "default": "markdown",
+          "description": "markdown table, json, or concise bullet list (fewer tokens)",
           "enum": [
             "markdown",
             "json",
+            "concise",
           ],
           "type": "string",
         },
@@ -152,9 +154,11 @@
         },
         "response_format": {
           "default": "markdown",
+          "description": "markdown table, json, or concise bullet list (fewer tokens)",
           "enum": [
             "markdown",
             "json",
+            "concise",
           ],
           "type": "string",
         },
@@ -764,42 +768,6 @@
       "type": "object",
     },
     "name": "proton_pass_copy",
-  },
-  {
-    "annotations": {
-      "openWorldHint": true,
-      "readOnlyHint": true,
-    },
-    "inputSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "properties": {},
-      "type": "object",
-    },
-    "name": "proton_calendar_list_events",
-  },
-  {
-    "annotations": {
-      "openWorldHint": true,
-      "readOnlyHint": true,
-    },
-    "inputSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "properties": {},
-      "type": "object",
-    },
-    "name": "proton_calendar_create_event",
-  },
-  {
-    "annotations": {
-      "openWorldHint": true,
-      "readOnlyHint": true,
-    },
-    "inputSchema": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "properties": {},
-      "type": "object",
-    },
-    "name": "proton_calendar_list_calendars",
   },
   {
     "annotations": {

@@ -51,6 +51,28 @@ export interface LoginResult {
 
 const CLI_TIMEOUT = 30_000
 const SPAWN_PROMPT_TIMEOUT = 15_000
+const PROMPT_IDLE_TIMEOUT = 15_000
+
+const KNOWN_PROMPT_MARKERS = [
+  '>>>',
+  'Username',
+  'email',
+  'Password',
+  '2FA',
+  'TOTP',
+  'two-factor',
+  'logged in',
+  'success',
+  'OK',
+] as const
+
+function bufferMatchesKnownPrompt(buffer: string): boolean {
+  return KNOWN_PROMPT_MARKERS.some((m) => buffer.includes(m))
+}
+
+function sanitizePromptSnippet(buffer: string, maxLen = 120): string {
+  return buffer.replace(/[\r\n]+/g, ' ').slice(-maxLen)
+}
 
 export class BridgeClient {
   private child: ChildProcess | null = null
@@ -390,6 +412,7 @@ export class BridgeClient {
       const child = execFile(this.bin, ['--cli'], { timeout: CLI_TIMEOUT })
       let out = ''
       let started = false
+      let settled = false
 
       const send = (data: string) => {
         child.stdin?.write(data)
@@ -400,10 +423,41 @@ export class BridgeClient {
         handlers.push(handler)
       }
 
+      const finish = (fn: () => void) => {
+        if (settled) return
+        settled = true
+        clearTimeout(globalTimer)
+        clearTimeout(idleTimer)
+        fn()
+      }
+
+      const resetIdleTimer = () => {
+        clearTimeout(idleTimer)
+        idleTimer = setTimeout(() => {
+          if (settled) return
+          if (out.length > 0 && !bufferMatchesKnownPrompt(out)) {
+            child.kill()
+            finish(() => {
+              reject(
+                new Error(
+                  `unknown bridge prompt (idle ${PROMPT_IDLE_TIMEOUT / 1000}s): ${sanitizePromptSnippet(out)}`,
+                ),
+              )
+            })
+          }
+        }, PROMPT_IDLE_TIMEOUT)
+      }
+
       configure(send, onData)
+
+      let idleTimer = setTimeout(() => {
+        /* replaced by resetIdleTimer on first data */
+      }, PROMPT_IDLE_TIMEOUT)
+      resetIdleTimer()
 
       child.stdout?.on('data', (d: string) => {
         out += d
+        resetIdleTimer()
         if (out.includes('>>>') && !started) {
           started = true
           child.stdin?.write(command + '\n')
@@ -413,14 +467,22 @@ export class BridgeClient {
       })
 
       child.on('close', (code) => {
-        if (code === 0 || out.length > 0) resolve(out)
-        else reject(new Error(`bridge exited with ${code}`))
+        finish(() => {
+          if (code === 0 || out.length > 0) resolve(out)
+          else reject(new Error(`bridge exited with ${code}`))
+        })
       })
-      child.on('error', reject)
+      child.on('error', (err) => {
+        finish(() => {
+          reject(err)
+        })
+      })
 
-      setTimeout(() => {
+      const globalTimer = setTimeout(() => {
         child.kill()
-        reject(new Error('timeout after 30s'))
+        finish(() => {
+          reject(new Error('timeout after 30s'))
+        })
       }, CLI_TIMEOUT)
     })
   }

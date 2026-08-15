@@ -238,7 +238,7 @@ hints) so MCP clients can reason about effects before invoking.
 | `mailbox` | string | required | `"INBOX"` |  |
 | `limit` | integer | required | `25` |  |
 | `offset` | integer | required | `0` |  |
-| `response_format` | string | required | `"markdown"` |  |
+| `response_format` | string | required | `"markdown"` | markdown table, json, or concise bullet list (fewer tokens) |
 
 **Output schema:**
 
@@ -350,7 +350,7 @@ hints) so MCP clients can reason about effects before invoking.
 | `from_address` | string | optional |  | Restrict to messages from this address |
 | `to_address` | string | optional |  | Restrict to messages to this address |
 | `limit` | integer | required | `25` |  |
-| `response_format` | string | required | `"markdown"` |  |
+| `response_format` | string | required | `"markdown"` | markdown table, json, or concise bullet list (fewer tokens) |
 
 **Output schema:**
 

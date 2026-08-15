@@ -39,7 +39,7 @@ function cfg(overrides: Partial<Config["transport"]> = {}): Config {
         },
       },
       pass: { enabled: false, storeDir: "/tmp" },
-      calendar: { enabled: false },
+      calendar: { enabled: false, experimental: false },
       drive: { enabled: false },
     },
     transport: {
@@ -151,6 +151,29 @@ describe("HTTP transport · auth and session lifecycle", () => {
     const res = await request(app).post("/mcp").set("Authorization", "Bearer expected-token").send({ jsonrpc: "2.0", id: 1, method: "x" });
     const hasRateLimitHeader = Object.keys(res.headers).some((k) => k.toLowerCase().startsWith("ratelimit"));
     expect(hasRateLimitHeader).toBe(true);
+  });
+
+  it("audit-tier tools/call are rate-limited after 5 requests", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    const body = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "proton_drive_audit", arguments: {} },
+    };
+    let lastStatus = 0;
+    for (let i = 0; i < 6; i++) {
+      const res = await request(app)
+        .post("/mcp")
+        .set("Authorization", "Bearer expected-token")
+        .send(body);
+      lastStatus = res.status;
+      if (i < 5) {
+        // May be 400 (no session) but must not be 429 yet
+        expect(res.status).not.toBe(429);
+      }
+    }
+    expect(lastStatus).toBe(429);
   });
 });
 
