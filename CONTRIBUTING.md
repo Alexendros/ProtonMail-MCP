@@ -19,6 +19,9 @@ Gracias por considerar contribuir. Este proyecto es un agente MCP multi-producto
 4. **Abre el PR** contra `main` y rellena la plantilla.
 5. **Itera.** Revisión normalmente en una semana. Rebase sobre `main` en lugar de merge.
 6. **Merge.** Squash-merge por defecto una vez CI verde y revisión aprobada.
+   Preferir **commits atómicos** en la rama (una unidad lógica por commit) para
+   facilitar `git blame`/`bisect`; el squash del PR sigue siendo el mensaje
+   conventional que analiza semantic-release.
 
 ## Desarrollo local
 

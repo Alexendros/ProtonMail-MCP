@@ -1,0 +1,35 @@
+name: Release Preview
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        with:
+          script: |
+            const t = context.payload.pull_request.title;
+            // Mirror conventional-commit-analyzer: feat! / BREAKING CHANGE → major
+            const isBreaking =
+              /^(feat|fix|perf|refactor|chore|docs|style|test|build|ci|revert)(\(.+\))?!:/.test(t) ||
+              /BREAKING CHANGE/i.test(t);
+            const bump = isBreaking
+              ? 'major'
+              : /^(feat)(\(.+\))?:/.test(t)
+                ? 'minor'
+                : /^(fix|perf)(\(.+\))?:/.test(t)
+                  ? 'patch'
+                  : 'sin release';
+            const body = `**Release preview**: \`${t}\` → bump **${bump}**`;
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.body.includes('**Release preview**'));
+            if (prev) await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            else await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });

@@ -8,7 +8,8 @@ en npm desde GitHub Actions usando **OIDC Trusted Publishing** (sin `NPM_TOKEN`)
 1. Cada push a `main` dispara `release.yml` → `semantic-release` analiza commits.
 2. Si hay un `feat:`, `fix:` o `BREAKING CHANGE:`, se crea una nueva versión.
 3. `semantic-release` actualiza `CHANGELOG.md`, crea un tag y un GitHub Release.
-4. El job `publish-npm` se ejecuta tras el release exitoso y publica a npm vía OIDC.
+4. `@semantic-release/npm` publica a npm vía OIDC trusted publishing (mismo job `release`, sin job `publish-npm` separado).
+5. Si hay release nueva, el job `publish-ghcr` construye desde el tag `vX.Y.Z` y publica `:latest`, `:X.Y.Z`, `:X.Y` y `:sha-…`.
 
 ## Configuración requerida (una sola vez)
 

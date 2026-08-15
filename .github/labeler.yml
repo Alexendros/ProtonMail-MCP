@@ -1,0 +1,46 @@
+area/mail:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/imap.ts
+          - src/smtp.ts
+          - src/server/mail.ts
+          - src/addresses.ts
+
+area/drive:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/drive*.ts
+          - src/server/drive.ts
+
+area/pass:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/pass.ts
+          - src/server/pass.ts
+
+area/bridge:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/bridge/**
+
+area/agent:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/agent/**
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .releaserc.json
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - "*.md"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**

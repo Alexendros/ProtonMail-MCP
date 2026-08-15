@@ -3,7 +3,7 @@
   "private": false,
   "version": "1.2.1",
   "mcpName": "io.github.Alexendros/protonsuite-agent",
-  "description": "Agente Proton Suite con MCP server embebido: Mail (Bridge IMAP/SMTP), Pass (pass-cli), Calendar y Drive — 14+ tools, auto-configuración, organización inteligente y alertas de seguridad.",
+  "description": "Agente Proton Suite con MCP server embebido: Mail (Bridge IMAP/SMTP), Pass (pass-cli), Drive — 47 tools por defecto (50 con Calendar experimental), auto-configuración, organización inteligente y alertas de seguridad.",
   "license": "AGPL-3.0",
   "type": "module",
   "bin": {
@@ -118,6 +118,7 @@
     "@eslint/js": "^9.39.4",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^11.0.1",
     "@semantic-release/github": "^12.0.9",
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.1",

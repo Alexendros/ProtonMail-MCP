@@ -71,7 +71,7 @@
       groupName: "MCP SDK",
       automerge: false,
       schedule: ["at any time"],
-      addLabels: ["mcp"],
+      addLabels: ["mcp", "mcp-sdk", "deps"],
     },
 
     // [2] Deps de PRODUCCIÓN — runtime + supply chain.
@@ -96,7 +96,7 @@
       groupName: "Dev deps (autodemerge)",
       automerge: true,
       automergeType: "branch",
-      addLabels: ["dev-deps"],
+      addLabels: ["dev-deps", "automerged"],
     },
 
     // [4] Major updates — breaking changes, siempre requieren revisión.

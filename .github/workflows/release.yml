@@ -4,37 +4,38 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Simular release sin publicar nada"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release
   cancel-in-progress: false
 
 jobs:
   verify:
-    name: Verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 22
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           version: latest
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          # No pnpm cache on release path: supply-chain posture (docs/publishing.md)
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint
-      - run: pnpm run typecheck
-      - run: pnpm test
-      - run: pnpm run build
+      - run: pnpm typecheck && pnpm lint && pnpm test
 
-  semantic-release:
-    name: Semantic Release
+  release:
     needs: verify
     runs-on: ubuntu-latest
     permissions:
@@ -43,56 +44,51 @@ jobs:
       pull-requests: write
       id-token: write
     outputs:
-      new-release-published: ${{ steps.release.outputs.new_release_published }}
-      new-release-version: ${{ steps.release.outputs.new_release_version }}
+      published: ${{ steps.meta.outputs.published }}
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 22
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
         with:
           version: latest
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - id: release
-        run: npx semantic-release
+      - run: pnpm build
+      - name: Semantic Release
+        id: semrel
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-npm:
-    name: Publish to npm
-    needs: semantic-release
-    if: needs.semantic-release.outputs.new-release-published == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
-          node-version: 22
-          registry-url: 'https://registry.npmjs.org'
-          package-manager-cache: false
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        with:
-          version: latest
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - name: Publish (OIDC trusted publishing + provenance)
-        run: npm publish --provenance --access public
+        run: |
+          set -euo pipefail
+          BEFORE="$(node -p "require('./package.json').version")"
+          echo "before=${BEFORE}" >> "$GITHUB_OUTPUT"
+          npx semantic-release ${{ github.event.inputs.dry-run == 'true' && '--dry-run' || '' }}
+          AFTER="$(node -p "require('./package.json').version")"
+          echo "after=${AFTER}" >> "$GITHUB_OUTPUT"
+      - name: Export release metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          if [ "${{ steps.semrel.outputs.before }}" != "${{ steps.semrel.outputs.after }}" ]; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
 
   publish-ghcr:
     name: Build & push to GHCR
-    needs: [verify, semantic-release]
-    if: github.ref == 'refs/heads/main'
+    needs: release
+    if: >-
+      github.event_name == 'push'
+      && needs.release.outputs.published == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -102,6 +98,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: v${{ needs.release.outputs.version }}
       - uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
       - name: Login to GHCR
         uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4
@@ -116,9 +113,9 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=sha,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+            type=semver,pattern={{version}},value=v${{ needs.release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.release.outputs.version }}
       - name: Build & push
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:

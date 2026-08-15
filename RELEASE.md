@@ -10,7 +10,7 @@ Las releases se gestionan automáticamente con [semantic-release](https://github
    - Analiza los commits desde el último release.
    - Determina la próxima versión (MAJOR, MINOR o PATCH).
    - Genera/actualiza `CHANGELOG.md`.
-   - Publica el paquete en npm (vía OIDC trusted publishing).
+   - Publica el paquete en npm vía `@semantic-release/npm` (OIDC trusted publishing, sin job separado).
    - Crea un release en GitHub con las notas generadas.
    - Crea un tag `vX.Y.Z` y hace push del bump de versión a `main`.
 
