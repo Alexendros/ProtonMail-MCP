@@ -278,6 +278,30 @@ describe("loadConfig · env validation", () => {
     expect(cfg.products.pass.storeDir).toBe("/tmp/gopass-store");
   });
 
+  it("alerts ntfy se activa con ALERT_NTFY_TOPIC", () => {
+    process.env.PROTON_BRIDGE_USER = "a@b.com";
+    process.env.PROTON_BRIDGE_PASS = "x";
+    process.env.PROTON_MAIL_FROM = "a@b.com";
+    process.env.ALERT_NTFY_TOPIC = "protonsuite-alerts";
+    process.env.ALERT_NTFY_URL = "https://ntfy.example";
+    process.env.ALERT_NTFY_TOKEN = "tk_test";
+    const cfg = loadConfig();
+    expect(cfg.alerts.ntfy?.topic).toBe("protonsuite-alerts");
+    expect(cfg.alerts.ntfy?.url).toBe("https://ntfy.example");
+    expect(cfg.alerts.ntfy?.token).toBe("tk_test");
+  });
+
+  it("alerts ntfy sin token usa URL por defecto", () => {
+    process.env.PROTON_BRIDGE_USER = "a@b.com";
+    process.env.PROTON_BRIDGE_PASS = "x";
+    process.env.PROTON_MAIL_FROM = "a@b.com";
+    process.env.ALERT_NTFY_TOPIC = "  topic-only  ";
+    const cfg = loadConfig();
+    expect(cfg.alerts.ntfy?.topic).toBe("topic-only");
+    expect(cfg.alerts.ntfy?.url).toBe("https://ntfy.sh");
+    expect(cfg.alerts.ntfy?.token).toBeUndefined();
+  });
+
   it("calendar can be enabled", () => {
     process.env.PROTON_BRIDGE_USER = "a@b.com";
     process.env.PROTON_BRIDGE_PASS = "x";

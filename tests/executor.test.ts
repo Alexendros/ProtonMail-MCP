@@ -138,6 +138,15 @@ vi.mock('../src/drive-audit.js', () => ({
   DriveAuditor: vi.fn().mockImplementation(() => mockDriveAuditorFns),
 }))
 
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>()
+  return {
+    ...actual,
+    mkdirSync: vi.fn(),
+    renameSync: vi.fn(),
+  }
+})
+
 vi.mock('../src/ecosystem/discovery.js', () => ({
   checkAllBinaries: vi.fn().mockReturnValue(mockBinaries),
 }))
@@ -307,6 +316,21 @@ describe('runAgent · drive goals', () => {
     await runAgent('drive-organize')
     expect(mockDriveAuditorFns.buildOrganizePlan).toHaveBeenCalled()
     expect(mockLogFns.info).toHaveBeenCalledWith('drive-organize plan (dry-run)', expect.objectContaining({ suggestions: 0 }))
+  })
+
+  it('drive-organize sin dry-run aplica moves', async () => {
+    const { mkdirSync, renameSync } = await import('node:fs')
+    mockDriveAuditorFns.buildOrganizePlan.mockReturnValue({
+      suggestions: [{ action: 'move', from: 'a.doc', to: 'docs/a.doc' }],
+    })
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withDriveEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: false },
+    })
+    await runAgent('drive-organize')
+    expect(mkdirSync).toHaveBeenCalled()
+    expect(renameSync).toHaveBeenCalled()
+    expect(mockLogFns.info).toHaveBeenCalledWith('drive-organize applied', { moved: 1 })
   })
 
   it('drive-list lista archivos remotos', async () => {

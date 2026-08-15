@@ -306,6 +306,19 @@ describe('PassClient', () => {
       expect(result.staleEntries).toContain('old')
       expect(result.rotationPlan.some((i) => i.path === 'old' && i.reason === 'stale')).toBe(true)
     })
+
+    it('ignora stale cuando stat falla', async () => {
+      hoisted.mockReaddir.mockResolvedValue(['x.gpg'])
+      hoisted.mockStat.mockRejectedValue(new Error('ENOENT'))
+      const c = makeClient()
+      const promise = c.audit()
+      for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 0))
+      hoisted.captured[0].emitData('StrongP@ss1234!\n')
+      hoisted.captured[0].emitClose(0)
+      const result = await promise
+      expect(result.staleEntries).toEqual([])
+      expect(result.storeOk).toBe(true)
+    })
   })
 
   describe('validatePath', () => {
