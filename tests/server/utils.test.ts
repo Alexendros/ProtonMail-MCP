@@ -114,12 +114,30 @@ describe('renderEmailList', () => {
     expect(result).toContain('| 5 | — | — | (no subject) | — |')
   })
 
-  it('formatea fecha sin reemplazar T si no hay T', () => {
+  it('renderiza modo concise con bullets y truncado corto', () => {
+    const longFrom = 'very-long-email-address-that-exceeds@example.com'
     const items = [
-      { uid: 1, from: 'a@b.com', subject: 'S', date: 'sin-formato', flags: [] },
+      {
+        uid: 10,
+        from: longFrom,
+        subject: 'Hola mundo',
+        date: '2026-06-15T10:00:00Z',
+        flags: [],
+      },
+      {
+        uid: 11,
+        from: undefined,
+        subject: undefined,
+        date: undefined,
+        flags: [],
+      },
     ]
-    const result = renderEmailList(items, 'X', 1, 0)
-    expect(result).toContain('sin-formato')
+    const result = renderEmailList(items, 'INBOX', 10, 0, true)
+    expect(result).toContain('**INBOX** — 2/10 (offset 0)')
+    expect(result).toContain('- 10 2026-06-15')
+    expect(result).toContain('| Hola mundo')
+    expect(result).toContain('- 11 — — | (no subject)')
+    expect(result).not.toContain('| UID | Date |')
   })
 })
 

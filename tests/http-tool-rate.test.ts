@@ -30,6 +30,13 @@ describe("getToolRateClass", () => {
 
   it("defaults non-tool RPC and unknown tools to read", () => {
     expect(getToolRateClass(req({ method: "initialize" }))).toBe("read");
+    expect(getToolRateClass(req(null))).toBe("read");
+    expect(getToolRateClass(req({ method: "tools/call", params: null }))).toBe(
+      "read",
+    );
+    expect(
+      getToolRateClass(req({ method: "tools/call", params: { name: 42 } })),
+    ).toBe("read");
     expect(
       getToolRateClass(
         req({ method: "tools/call", params: { name: "proton_list_emails" } }),

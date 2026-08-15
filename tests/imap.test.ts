@@ -37,6 +37,9 @@ const imapState = {
   connectFailUntil: 0, // connect() lanza mientras attempts <= este valor
   connectErrorMessage: 'ECONNREFUSED', // mensaje que lanza connect() al fallar
   listCalls: 0,
+  statusCalls: 0,
+  fetchCalls: 0,
+  searchCalls: 0,
   // Palancas de error por método
   listShouldThrow: false,
   statusShouldThrow: false,
@@ -72,6 +75,7 @@ vi.mock('imapflow', () => {
     }
     status() {
       if (imapState.statusShouldThrow) throw new Error('Mailbox does not exist')
+      imapState.statusCalls += 1
       return imapState.statusResult
     }
     getMailboxLock() {
@@ -82,6 +86,7 @@ vi.mock('imapflow', () => {
       }
     }
     *fetch() {
+      imapState.fetchCalls += 1
       yield* imapState.fetchResults
     }
     fetchOne() {
@@ -90,6 +95,7 @@ vi.mock('imapflow', () => {
     }
     search() {
       if (imapState.searchShouldThrow) throw new Error('SEARCH failed')
+      imapState.searchCalls += 1
       return imapState.searchResult
     }
     messageMove() {
@@ -217,6 +223,9 @@ beforeEach(() => {
   imapState.connectFailUntil = 0
   imapState.connectErrorMessage = 'ECONNREFUSED'
   imapState.listCalls = 0
+  imapState.statusCalls = 0
+  imapState.fetchCalls = 0
+  imapState.searchCalls = 0
   imapState.listShouldThrow = false
   imapState.statusShouldThrow = false
   imapState.searchShouldThrow = false
@@ -521,6 +530,48 @@ describe('ImapClient · listEmails', () => {
     expect(imapState.lockReleases).toBe(1) // lock liberado
   })
 
+  it('serves listEmails from cache when mailbox fingerprint is unchanged', async () => {
+    imapState.fetchResults = [summaryMsg({ uid: 42, seq: 1 })]
+    const c = makeClient()
+    await c.listEmails('INBOX', 25, 0)
+    await c.listEmails('INBOX', 25, 0)
+    expect(imapState.fetchCalls).toBe(1)
+    expect(imapState.statusCalls).toBe(2)
+  })
+
+  it('refetches listEmails when mailbox message count changes', async () => {
+    imapState.fetchResults = [summaryMsg({ uid: 42, seq: 1 })]
+    const c = makeClient()
+    await c.listEmails('INBOX', 25, 0)
+    imapState.statusResult = {
+      ...imapState.statusResult,
+      messages: 11,
+      uidNext: 101,
+    }
+    imapState.fetchResults = [
+      summaryMsg({ uid: 42, seq: 1 }),
+      summaryMsg({ uid: 43, seq: 2 }),
+    ]
+    await c.listEmails('INBOX', 25, 0)
+    expect(imapState.fetchCalls).toBe(2)
+  })
+
+  it('serves searchEmails from cache until fingerprint changes', async () => {
+    imapState.searchResult = [42]
+    imapState.fetchResults = [summaryMsg({ uid: 42, seq: 1 })]
+    const c = makeClient()
+    await c.searchEmails('INBOX', { seen: false }, 10)
+    await c.searchEmails('INBOX', { seen: false }, 10)
+    expect(imapState.searchCalls).toBe(1)
+    imapState.statusResult = {
+      ...imapState.statusResult,
+      messages: 11,
+      uidNext: 101,
+    }
+    await c.searchEmails('INBOX', { seen: false }, 10)
+    expect(imapState.searchCalls).toBe(2)
+  })
+
   it('returns empty for an empty mailbox (total=0)', async () => {
     imapState.statusResult = { messages: 0 }
     const c = makeClient()
@@ -536,11 +587,11 @@ describe('ImapClient · listEmails', () => {
     expect(res).toEqual({ items: [], total: 5 })
   })
 
-  it('releases the lock even when status throws', async () => {
+  it('does not acquire mailbox lock when status throws', async () => {
     imapState.statusShouldThrow = true
     const c = makeClient()
     await expect(c.listEmails('INBOX', 25, 0)).rejects.toThrow()
-    expect(imapState.lockReleases).toBe(1)
+    expect(imapState.lockReleases).toBe(0)
   })
 })
 

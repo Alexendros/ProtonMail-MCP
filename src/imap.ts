@@ -81,7 +81,12 @@ export class ImapClient {
   private mailboxListCache: { data: MailboxInfo[]; expires: number } | null = null
   private emailSummaryCache = new Map<
     string,
-    { data: { items: EmailSummary[]; total?: number; matched?: number }; expires: number }
+    {
+      data: { items: EmailSummary[]; total?: number; matched?: number }
+      expires: number
+      /** Mailbox fingerprint (messages:uidNext) — miss cache when mailbox mutates externally. */
+      fingerprint: string
+    }
   >()
 
   private static readonly MAILBOX_LIST_TTL_MS = 60_000
@@ -353,6 +358,13 @@ export class ImapClient {
    * el orden de seq se corresponde con el orden de llegada — válido en
    * Bridge/Proton, pero si migramos a otro IMAP habría que usar SORT.
    */
+  private mailboxFingerprint(status: {
+    messages?: number
+    uidNext?: number
+  }): string {
+    return `${status.messages ?? 0}:${status.uidNext ?? 0}`
+  }
+
   async listEmails(
     mailbox: string,
     limit: number,
@@ -360,21 +372,25 @@ export class ImapClient {
   ): Promise<{ items: EmailSummary[]; total: number }> {
     const cacheKey = `${mailbox}:list:${limit}:${offset}`
     const now = Date.now()
+    const c = await this.connect()
+    // Cheap STATUS before serving cache so external arrivals (SMTP → IMAP)
+    // invalidate stale list snapshots within the TTL window.
+    const status = await c.status(mailbox, { messages: true, uidNext: true })
+    const total = status.messages ?? 0
+    const fingerprint = this.mailboxFingerprint(status)
     const cached = this.emailSummaryCache.get(cacheKey)
     if (
       cached &&
       cached.expires > now &&
+      cached.fingerprint === fingerprint &&
       cached.data.total !== undefined &&
       this.client?.usable
     ) {
       return { items: cached.data.items, total: cached.data.total }
     }
 
-    const c = await this.connect()
     const lock = await c.getMailboxLock(mailbox)
     try {
-      const status = await c.status(mailbox, { messages: true })
-      const total = status.messages ?? 0
       if (total === 0) return { items: [], total: 0 }
 
       // Ventana desde el final: si total=1000 y offset=0, end=1000, start=976
@@ -395,6 +411,7 @@ export class ImapClient {
       this.emailSummaryCache.set(cacheKey, {
         data: { items, total },
         expires: now + ImapClient.EMAIL_SUMMARY_TTL_MS,
+        fingerprint,
       })
       return { items, total }
     } finally {
@@ -409,17 +426,20 @@ export class ImapClient {
   ): Promise<{ items: EmailSummary[]; matched: number }> {
     const cacheKey = `${mailbox}:search:${JSON.stringify(criteria)}:${limit}`
     const now = Date.now()
+    const c = await this.connect()
+    const status = await c.status(mailbox, { messages: true, uidNext: true })
+    const fingerprint = this.mailboxFingerprint(status)
     const cached = this.emailSummaryCache.get(cacheKey)
     if (
       cached &&
       cached.expires > now &&
+      cached.fingerprint === fingerprint &&
       cached.data.matched !== undefined &&
       this.client?.usable
     ) {
       return { items: cached.data.items, matched: cached.data.matched }
     }
 
-    const c = await this.connect()
     const lock = await c.getMailboxLock(mailbox)
     try {
       const searchResult = await c.search(criteria, { uid: true })
@@ -438,6 +458,7 @@ export class ImapClient {
       this.emailSummaryCache.set(cacheKey, {
         data: { items, matched },
         expires: now + ImapClient.EMAIL_SUMMARY_TTL_MS,
+        fingerprint,
       })
       return { items, matched }
     } finally {

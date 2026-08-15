@@ -175,6 +175,26 @@ describe("HTTP transport · auth and session lifecycle", () => {
     }
     expect(lastStatus).toBe(429);
   });
+
+  it("write-tier tools/call are rate-limited after 30 requests", async () => {
+    const app = buildHttpApp({ buildServer: miniServer, cfg: cfg(), log: silent });
+    const body = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "proton_send_email", arguments: {} },
+    };
+    let lastStatus = 0;
+    for (let i = 0; i < 31; i++) {
+      const res = await request(app)
+        .post("/mcp")
+        .set("Authorization", "Bearer expected-token")
+        .send(body);
+      lastStatus = res.status;
+      if (i < 30) expect(res.status).not.toBe(429);
+    }
+    expect(lastStatus).toBe(429);
+  });
 });
 
 describe("CORS preflight", () => {
