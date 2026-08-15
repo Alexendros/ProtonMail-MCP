@@ -27,6 +27,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import { compareTokens, extractBearer } from "./auth.js";
 import type { Config } from "./config.js";
+import { getToolRateClass } from "./http-tool-rate.js";
 import {
   registry as metricsRegistry,
   mcpRequestsTotal,
@@ -68,20 +69,51 @@ export function buildHttpApp(deps: HttpAppDeps): Express {
   // Registro en memoria de sesiones activas. `lastUsed` alimenta la eviction.
   const sessions = new Map<string, { transport: StreamableHTTPServerTransport; server: McpServer; lastUsed: number }>();
 
-  // 120 req/min por bearer; si no hay bearer (p. ej. preflight OPTIONS) se
-  // recae en la IP via `ipKeyGenerator` de express-rate-limit, y en último
-  // caso en "anon". draft-7 = headers estándar modernos `RateLimit`.
-  const limiter = rateLimit({
+  // Tiered rate limits per tool class (same bearer key across tiers).
+  const rateKey = (req: Request) =>
+    extractBearer(req.headers.authorization) ||
+    ipKeyGenerator(req.ip ?? "") ||
+    "anon";
+
+  const readLimiter = rateLimit({
     windowMs: 60_000,
     limit: 120,
     standardHeaders: "draft-7",
     legacyHeaders: false,
-    keyGenerator: (req) =>
-      extractBearer(req.headers.authorization) ||
-      ipKeyGenerator(req.ip ?? "") ||
-      "anon",
-    message: { error: "rate_limit_exceeded" },
+    keyGenerator: rateKey,
+    message: { error: "rate_limit_exceeded", tier: "read" },
   });
+
+  const writeLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 30,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    keyGenerator: rateKey,
+    message: { error: "rate_limit_exceeded", tier: "write" },
+  });
+
+  const auditLimiter = rateLimit({
+    windowMs: 60_000,
+    limit: 5,
+    standardHeaders: "draft-7",
+    legacyHeaders: false,
+    keyGenerator: rateKey,
+    message: { error: "rate_limit_exceeded", tier: "audit" },
+  });
+
+  function tieredRateLimit(req: Request, res: Response, next: NextFunction): void {
+    const tier = getToolRateClass(req);
+    if (tier === "audit") {
+      auditLimiter(req, res, next);
+      return;
+    }
+    if (tier === "write") {
+      writeLimiter(req, res, next);
+      return;
+    }
+    readLimiter(req, res, next);
+  }
 
   // CORS preflight handler. DEBE ir antes de auth: los clientes web
   // hacen OPTIONS preflight sin Authorization header; si pasa por auth recibe
@@ -124,7 +156,7 @@ export function buildHttpApp(deps: HttpAppDeps): Express {
 
   // Orden importa: rate-limit ANTES de auth. Así un atacante que bombardee
   // con tokens inválidos también consume su cuota y deja de ser útil.
-  app.use("/mcp", limiter, authMiddleware);
+  app.use("/mcp", tieredRateLimit, authMiddleware);
 
   app.all("/mcp", async (req: Request, res: Response) => {
     const sessionId = (req.headers["mcp-session-id"] as string | undefined) ?? undefined;

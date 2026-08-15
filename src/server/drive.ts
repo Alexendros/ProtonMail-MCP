@@ -4,6 +4,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import type { createLogger, Config } from '../config.js'
 import { DriveAuditor } from '../drive-audit.js'
+import { withDrivePathLock } from '../drive-mutex.js'
 import type { DriveClient } from '../drive.js'
 import { asStructured } from './structured-content.js'
 
@@ -184,6 +185,7 @@ function registerDriveOrganizeTool(
     },
     async ({ dry_run, staging_dir }) => {
       const staging = staging_dir ? resolve(staging_dir) : driveClient.stagingDir
+      return withDrivePathLock(`staging:${staging}`, async () => {
       try {
         const plan = await auditor.buildOrganizePlan(staging)
         if (dry_run) {
@@ -212,6 +214,7 @@ function registerDriveOrganizeTool(
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: String(err) }] }
       }
+      })
     },
   )
 }

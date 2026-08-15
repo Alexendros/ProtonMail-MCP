@@ -78,6 +78,19 @@ export interface MailboxInfo {
 export class ImapClient {
   private client: ImapFlow | null = null
   private connecting: Promise<ImapFlow> | null = null
+  private mailboxListCache: { data: MailboxInfo[]; expires: number } | null = null
+  private emailSummaryCache = new Map<
+    string,
+    {
+      data: { items: EmailSummary[]; total?: number; matched?: number }
+      expires: number
+      /** Mailbox fingerprint (messages:uidNext) — miss cache when mailbox mutates externally. */
+      fingerprint: string
+    }
+  >()
+
+  private static readonly MAILBOX_LIST_TTL_MS = 60_000
+  private static readonly EMAIL_SUMMARY_TTL_MS = 30_000
 
   constructor(
     private readonly cfg: ResolvedBridgeConfig,
@@ -130,6 +143,7 @@ export class ImapClient {
     if (this.client?.usable) return this.client
     if (this.client && !this.client.usable) {
       this.log.debug('IMAP client no longer usable, discarding')
+      this.invalidateAllCaches()
       try {
         await this.client.logout()
       } catch {
@@ -248,13 +262,39 @@ export class ImapClient {
   }
 
   // ---------------------------------------------------------------------------
+  // Cache helpers
+  // ---------------------------------------------------------------------------
+
+  private invalidateAllCaches(): void {
+    this.mailboxListCache = null
+    this.emailSummaryCache.clear()
+  }
+
+  private invalidateMailboxSummaries(mailbox: string): void {
+    const prefix = `${mailbox}:`
+    for (const key of this.emailSummaryCache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.emailSummaryCache.delete(key)
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Mailboxes
   // ---------------------------------------------------------------------------
 
   async listMailboxes(): Promise<MailboxInfo[]> {
+    const now = Date.now()
+    if (
+      this.mailboxListCache &&
+      this.mailboxListCache.expires > now &&
+      this.client?.usable
+    ) {
+      return this.mailboxListCache.data
+    }
     const c = await this.connect()
     const raw: ListResponse[] = await c.list()
-    return raw.map((m) => ({
+    const data = raw.map((m) => ({
       path: m.path,
       name: m.name,
       delimiter: m.delimiter,
@@ -263,6 +303,11 @@ export class ImapClient {
       subscribed: m.subscribed,
       listed: m.listed,
     }))
+    this.mailboxListCache = {
+      data,
+      expires: now + ImapClient.MAILBOX_LIST_TTL_MS,
+    }
+    return data
   }
 
   async createMailbox(
@@ -270,6 +315,7 @@ export class ImapClient {
   ): Promise<{ path: string; created: boolean }> {
     const c = await this.connect()
     const res = await c.mailboxCreate(path)
+    this.invalidateAllCaches()
     return { path: res.path, created: res.created }
   }
 
@@ -312,16 +358,39 @@ export class ImapClient {
    * el orden de seq se corresponde con el orden de llegada — válido en
    * Bridge/Proton, pero si migramos a otro IMAP habría que usar SORT.
    */
+  private mailboxFingerprint(status: {
+    messages?: number
+    uidNext?: number
+  }): string {
+    return `${status.messages ?? 0}:${status.uidNext ?? 0}`
+  }
+
   async listEmails(
     mailbox: string,
     limit: number,
     offset: number,
   ): Promise<{ items: EmailSummary[]; total: number }> {
+    const cacheKey = `${mailbox}:list:${limit}:${offset}`
+    const now = Date.now()
     const c = await this.connect()
+    // Cheap STATUS before serving cache so external arrivals (SMTP → IMAP)
+    // invalidate stale list snapshots within the TTL window.
+    const status = await c.status(mailbox, { messages: true, uidNext: true })
+    const total = status.messages ?? 0
+    const fingerprint = this.mailboxFingerprint(status)
+    const cached = this.emailSummaryCache.get(cacheKey)
+    if (
+      cached &&
+      cached.expires > now &&
+      cached.fingerprint === fingerprint &&
+      cached.data.total !== undefined &&
+      this.client?.usable
+    ) {
+      return { items: cached.data.items, total: cached.data.total }
+    }
+
     const lock = await c.getMailboxLock(mailbox)
     try {
-      const status = await c.status(mailbox, { messages: true })
-      const total = status.messages ?? 0
       if (total === 0) return { items: [], total: 0 }
 
       // Ventana desde el final: si total=1000 y offset=0, end=1000, start=976
@@ -339,6 +408,11 @@ export class ImapClient {
         items.push(this.toSummary(msg))
       }
       items.sort((a, b) => b.seq - a.seq)
+      this.emailSummaryCache.set(cacheKey, {
+        data: { items, total },
+        expires: now + ImapClient.EMAIL_SUMMARY_TTL_MS,
+        fingerprint,
+      })
       return { items, total }
     } finally {
       lock.release()
@@ -350,7 +424,22 @@ export class ImapClient {
     criteria: SearchObject,
     limit: number,
   ): Promise<{ items: EmailSummary[]; matched: number }> {
+    const cacheKey = `${mailbox}:search:${JSON.stringify(criteria)}:${limit}`
+    const now = Date.now()
     const c = await this.connect()
+    const status = await c.status(mailbox, { messages: true, uidNext: true })
+    const fingerprint = this.mailboxFingerprint(status)
+    const cached = this.emailSummaryCache.get(cacheKey)
+    if (
+      cached &&
+      cached.expires > now &&
+      cached.fingerprint === fingerprint &&
+      cached.data.matched !== undefined &&
+      this.client?.usable
+    ) {
+      return { items: cached.data.items, matched: cached.data.matched }
+    }
+
     const lock = await c.getMailboxLock(mailbox)
     try {
       const searchResult = await c.search(criteria, { uid: true })
@@ -366,6 +455,11 @@ export class ImapClient {
         items.push(this.toSummary(msg))
       }
       items.sort((a, b) => b.uid - a.uid)
+      this.emailSummaryCache.set(cacheKey, {
+        data: { items, matched },
+        expires: now + ImapClient.EMAIL_SUMMARY_TTL_MS,
+        fingerprint,
+      })
       return { items, matched }
     } finally {
       lock.release()
@@ -440,6 +534,7 @@ export class ImapClient {
       if (remove.length > 0)
         ok =
           (await c.messageFlagsRemove(String(uid), remove, { uid: true })) && ok
+      this.invalidateMailboxSummaries(mailbox)
       return ok
     } finally {
       lock.release()
@@ -455,6 +550,8 @@ export class ImapClient {
     const lock = await c.getMailboxLock(fromMailbox)
     try {
       const res = await c.messageMove(String(uid), toMailbox, { uid: true })
+      this.invalidateMailboxSummaries(fromMailbox)
+      this.invalidateMailboxSummaries(toMailbox)
       return !!res
     } finally {
       lock.release()
@@ -470,6 +567,8 @@ export class ImapClient {
     const lock = await c.getMailboxLock(fromMailbox)
     try {
       const res = await c.messageCopy(String(uid), toMailbox, { uid: true })
+      this.invalidateMailboxSummaries(fromMailbox)
+      this.invalidateMailboxSummaries(toMailbox)
       return !!res
     } finally {
       lock.release()
@@ -481,6 +580,7 @@ export class ImapClient {
     const lock = await c.getMailboxLock(mailbox)
     try {
       const res = await c.messageDelete(String(uid), { uid: true })
+      this.invalidateMailboxSummaries(mailbox)
       return res
     } finally {
       lock.release()
@@ -494,6 +594,7 @@ export class ImapClient {
   ): Promise<{ uid: number | undefined }> {
     const c = await this.connect()
     const res = await c.append(mailbox, raw, flags)
+    this.invalidateMailboxSummaries(mailbox)
     if (!res) return { uid: undefined }
     return { uid: typeof res.uid === 'number' ? res.uid : undefined }
   }

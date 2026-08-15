@@ -690,3 +690,24 @@ describe('R5 — shutdown: stdin.write error catch', () => {
     vi.useRealTimers()
   })
 })
+
+describe('R6 — login: unknown prompt idle timeout', () => {
+  it('rejects with unknown bridge prompt when stdout never matches known markers', async () => {
+    vi.useFakeTimers()
+    execFileImpl = () => {
+      const child = makeDefaultChild()
+      const stdout = child.stdout as EventEmitter
+      setTimeout(() => stdout.emit('data', 'UNEXPECTED PROMPT PLEASE TYPE MAGIC\n'), 0)
+      return child
+    }
+    const client = new BridgeClient(BIN, silentLog)
+    const loginPromise = client.login('u@test.com', 'secret')
+    const assertion = expect(loginPromise).resolves.toMatchObject({
+      ok: false,
+      message: expect.stringMatching(/unknown bridge prompt/),
+    })
+    await vi.advanceTimersByTimeAsync(16_000)
+    await assertion
+    vi.useRealTimers()
+  })
+})

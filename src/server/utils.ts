@@ -27,8 +27,19 @@ export function renderEmailList(
   mailbox: string,
   total: number,
   offset: number,
+  concise = false,
 ): string {
   if (items.length === 0) return `No messages in ${mailbox} (total: ${total}).`
+  if (concise) {
+    const head = `**${mailbox}** — ${items.length}/${total} (offset ${offset})`
+    const rows = items.map((m) => {
+      const date = m.date ? m.date.slice(0, 10) : '—'
+      const from = truncate(m.from ?? '—', 24)
+      const subject = truncate(m.subject ?? '(no subject)', 40)
+      return `- ${m.uid} ${date} ${from} | ${subject}`
+    })
+    return [head, ...rows].join('\n')
+  }
   const head = `**${mailbox}** — showing ${items.length} of ${total} (offset ${offset})\n\n| UID | Date | From | Subject | Flags |\n|---|---|---|---|---|`
   const rows = items.map((m) => {
     const date = m.date ? m.date.slice(0, 16).replace('T', ' ') : '—'

@@ -114,7 +114,7 @@ export function buildServer(
   }
 
   registerPassTools(server, { cfg, log })
-  registerCalendarTools(server, { log, enabled: cfg.products.calendar.enabled })
+  registerCalendarTools(server, { log, enabled: cfg.products.calendar.enabled, experimental: cfg.products.calendar.experimental })
   registerDriveTools(server, { cfg, log, driveClient })
   registerSuiteTool(server, { cfg, log, imap, driveClient, passwordResolver, bridgeCfg, passClient })
   registerEcosystemTools(server, { log })

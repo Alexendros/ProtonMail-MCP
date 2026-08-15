@@ -161,7 +161,10 @@ function registerListSearchTools(server: McpServer, deps: MailDeps) {
         mailbox: z.string().default('INBOX'),
         limit: z.number().int().min(1).max(100).default(25),
         offset: z.number().int().min(0).default(0),
-        response_format: z.enum(['markdown', 'json']).default('markdown'),
+        response_format: z
+          .enum(['markdown', 'json', 'concise'])
+          .default('markdown')
+          .describe('markdown table, json, or concise bullet list (fewer tokens)'),
       },
       outputSchema: emailListSchema,
       annotations: {
@@ -208,7 +211,10 @@ function registerListSearchTools(server: McpServer, deps: MailDeps) {
           .optional()
           .describe('Restrict to messages to this address'),
         limit: z.number().int().min(1).max(100).default(25),
-        response_format: z.enum(['markdown', 'json']).default('markdown'),
+        response_format: z
+          .enum(['markdown', 'json', 'concise'])
+          .default('markdown')
+          .describe('markdown table, json, or concise bullet list (fewer tokens)'),
       },
       outputSchema: emailSearchSchema,
       annotations: {
@@ -231,7 +237,7 @@ async function handleListEmails(
     mailbox: string
     limit: number
     offset: number
-    response_format: 'markdown' | 'json'
+    response_format: 'markdown' | 'json' | 'concise'
   },
 ) {
   const { imap } = deps
@@ -257,7 +263,13 @@ async function handleListEmails(
     content: [
       {
         type: 'text' as const,
-        text: renderEmailList(items, mailbox, total, offset),
+        text: renderEmailList(
+          items,
+          mailbox,
+          total,
+          offset,
+          response_format === 'concise',
+        ),
       },
     ],
     structuredContent: structured,
@@ -276,7 +288,7 @@ async function handleSearchEmails(
     from_address: string | undefined
     to_address: string | undefined
     limit: number
-    response_format: 'markdown' | 'json'
+    response_format: 'markdown' | 'json' | 'concise'
   },
 ) {
   const { imap } = deps
@@ -301,11 +313,21 @@ async function handleSearchEmails(
       structuredContent: structured,
     }
   }
+  const list = renderEmailList(
+    items,
+    args.mailbox,
+    matched,
+    0,
+    args.response_format === 'concise',
+  )
   return {
     content: [
       {
         type: 'text' as const,
-        text: `Matched ${matched} message(s), showing ${items.length}.\n\n${renderEmailList(items, args.mailbox, matched, 0)}`,
+        text:
+          args.response_format === 'concise'
+            ? list
+            : `Matched ${matched} message(s), showing ${items.length}.\n\n${list}`,
       },
     ],
     structuredContent: structured,

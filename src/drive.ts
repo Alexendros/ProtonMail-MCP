@@ -14,6 +14,7 @@ import { execFile, execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { DRIVE_EXEC_MAX_BUFFER } from './constants.js'
+import { withDrivePathLocks } from './drive-mutex.js'
 import { countFiles } from './drive-utils.js'
 
 export interface DriveConfig {
@@ -142,41 +143,45 @@ export class DriveClient {
     remotePath: string,
     localPath?: string,
   ): Promise<DownloadResult> {
-    try {
-      const staging = localPath ?? this.stagingDir
-      if (!existsSync(staging)) mkdirSync(staging, { recursive: true })
-      this.log.info('drive download', { remotePath, localPath: staging })
-      await this.execCli(['filesystem', 'download', remotePath, staging])
-      return { ok: true, remotePath, localPath: staging }
-    } catch (err) {
-      const msg = (err as Error).message
-      this.log.error('drive download failed', { error: msg, remotePath })
-      return {
-        ok: false,
-        remotePath,
-        localPath: localPath ?? this.stagingDir,
-        error: msg,
+    return withDrivePathLocks([remotePath], async () => {
+      try {
+        const staging = localPath ?? this.stagingDir
+        if (!existsSync(staging)) mkdirSync(staging, { recursive: true })
+        this.log.info('drive download', { remotePath, localPath: staging })
+        await this.execCli(['filesystem', 'download', remotePath, staging])
+        return { ok: true, remotePath, localPath: staging }
+      } catch (err) {
+        const msg = (err as Error).message
+        this.log.error('drive download failed', { error: msg, remotePath })
+        return {
+          ok: false,
+          remotePath,
+          localPath: localPath ?? this.stagingDir,
+          error: msg,
+        }
       }
-    }
+    })
   }
 
   async upload(localPath?: string, remotePath?: string): Promise<UploadResult> {
-    try {
-      const staging = localPath ?? this.stagingDir
-      const target = remotePath ?? '/my-files'
-      this.log.info('drive upload', { localPath: staging, remotePath: target })
-      await this.execCli(['filesystem', 'upload', staging, target])
-      return { ok: true, localPath: staging, remotePath: target }
-    } catch (err) {
-      const msg = (err as Error).message
-      this.log.error('drive upload failed', { error: msg, remotePath })
-      return {
-        ok: false,
-        localPath: localPath ?? this.stagingDir,
-        remotePath: remotePath ?? '/my-files',
-        error: msg,
+    const target = remotePath ?? '/my-files'
+    return withDrivePathLocks([target], async () => {
+      try {
+        const staging = localPath ?? this.stagingDir
+        this.log.info('drive upload', { localPath: staging, remotePath: target })
+        await this.execCli(['filesystem', 'upload', staging, target])
+        return { ok: true, localPath: staging, remotePath: target }
+      } catch (err) {
+        const msg = (err as Error).message
+        this.log.error('drive upload failed', { error: msg, remotePath })
+        return {
+          ok: false,
+          localPath: localPath ?? this.stagingDir,
+          remotePath: target,
+          error: msg,
+        }
       }
-    }
+    })
   }
 
   async share(remotePath: string, userEmail: string): Promise<ShareResult> {
@@ -227,15 +232,17 @@ export class DriveClient {
     from: string,
     to: string,
   ): Promise<{ ok: boolean; error?: string }> {
-    try {
-      this.log.info('drive moveFiles', { from, to })
-      await this.execCli(['filesystem', 'mv', from, to])
-      return { ok: true }
-    } catch (err) {
-      const msg = (err as Error).message
-      this.log.error('drive moveFiles failed', { error: msg, from, to })
-      return { ok: false, error: msg }
-    }
+    return withDrivePathLocks([from, to], async () => {
+      try {
+        this.log.info('drive moveFiles', { from, to })
+        await this.execCli(['filesystem', 'mv', from, to])
+        return { ok: true }
+      } catch (err) {
+        const msg = (err as Error).message
+        this.log.error('drive moveFiles failed', { error: msg, from, to })
+        return { ok: false, error: msg }
+      }
+    })
   }
 
   async copyFiles(

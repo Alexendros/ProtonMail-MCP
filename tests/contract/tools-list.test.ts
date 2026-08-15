@@ -3,7 +3,7 @@
  *
  * A través del transport HTTP real, verifica que la superficie de herramientas
  * expuesta a los clientes MCP es estable:
- *  - exactamente 50 tools registradas.
+ *  - exactamente 47 tools registradas por defecto (50 con Calendar experimental).
  *  - el conjunto de nombres coincide con el golden set (documentado en run1.md).
  *  - cada tool expone title, description, inputSchema y annotations.
  *  - cada tool declara `openWorldHint` (mínimo exigido por la convención del
@@ -12,7 +12,7 @@
  * No requiere GreenMail: los adapters están mockeados; el test solo LISTA.
  */
 import { describe, it, expect, vi, beforeAll } from "vitest";
-import { listContractTools, type ClientTool } from "./helpers.js";
+import { listContractTools, makeContractCfg, type ClientTool } from "./helpers.js";
 
 // Mocks de adapters — vitest los hoistea al inicio del módulo (antes de los
 // imports superiores), por lo que buildContractServer siempre ve versiones mockeadas.
@@ -34,7 +34,8 @@ vi.mock("../../src/bridge/bridge-client.js", () => ({
   BridgeClient: vi.fn().mockImplementation(() => ({})),
 }));
 
-// Golden set de los 50 tools (extracción de docs/api/mcp-tools.md).
+// Golden set de los 47 tools por defecto (Calendar oculto detrás de
+// PROTON_CALENDAR_EXPERIMENTAL=1). Véase package.json: "50 tools" total.
 const EXPECTED_TOOL_NAMES = [
   "proton_agent_plan",
   "proton_bridge_accounts",
@@ -43,9 +44,6 @@ const EXPECTED_TOOL_NAMES = [
   "proton_bridge_login",
   "proton_bridge_logout",
   "proton_bridge_status",
-  "proton_calendar_create_event",
-  "proton_calendar_list_calendars",
-  "proton_calendar_list_events",
   "proton_create_folder",
   "proton_delete_email",
   "proton_drive_audit",
@@ -95,8 +93,8 @@ describe("Contract: MCP tool list (client-facing tools/list)", () => {
     tools = await listContractTools();
   });
 
-  it("exposes exactly 50 tools", () => {
-    expect(tools).toHaveLength(50);
+  it("exposes exactly 47 tools by default", () => {
+    expect(tools).toHaveLength(47);
   });
 
   it("matches the golden tool-name set", () => {
@@ -139,5 +137,21 @@ describe("Contract: MCP tool list (client-facing tools/list)", () => {
   it("no duplicate tool names", () => {
     const names = tools.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+describe("Contract: Calendar experimental tools", () => {
+  it("exposes 50 tools when PROTON_CALENDAR_EXPERIMENTAL is enabled", async () => {
+    const experimentalTools = await listContractTools({
+      products: {
+        ...makeContractCfg().products,
+        calendar: { enabled: true, experimental: true },
+      },
+    });
+    expect(experimentalTools).toHaveLength(50);
+    const names = experimentalTools.map((t) => t.name);
+    expect(names).toContain("proton_calendar_list_events");
+    expect(names).toContain("proton_calendar_create_event");
+    expect(names).toContain("proton_calendar_list_calendars");
   });
 });
