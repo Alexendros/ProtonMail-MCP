@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/ci.yml/badge.svg)](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/codeql.yml/badge.svg)](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Iniciativas-Alexendros/agent-protonsuite/badge)](https://scorecard.dev/viewer/?uri=github.com/Iniciativas-Alexendros/agent-protonsuite)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522-brightgreen.svg)](./package.json)
 [![npm](https://img.shields.io/npm/v/@alexendros/protonsuite-agent)](https://www.npmjs.com/package/@alexendros/protonsuite-agent)
