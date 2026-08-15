@@ -32,7 +32,13 @@ jobs:
           PROTON_INTEGRATION_TEST: 'true'
           PROTON_BRIDGE_USER: ${{ secrets.PROTON_BRIDGE_USER }}
           PROTON_BRIDGE_PASS: ${{ secrets.PROTON_BRIDGE_PASS }}
+          PROTON_MAIL_FROM: ${{ secrets.PROTON_MAIL_FROM }}
           PROTON_BRIDGE_HOST: ${{ secrets.PROTON_BRIDGE_HOST || '127.0.0.1' }}
           PROTON_BRIDGE_IMAP_PORT: ${{ secrets.PROTON_BRIDGE_IMAP_PORT || '1143' }}
           PROTON_BRIDGE_SMTP_PORT: ${{ secrets.PROTON_BRIDGE_SMTP_PORT || '1025' }}
           PROTON_BRIDGE_TLS_INSECURE: 'true'
+          # Org secrets ALERT_NTFY_* disponibles; desactivados en CI para no spamear ntfy
+          ALERTS_ENABLED: 'false'
+          ALERT_NTFY_TOPIC: ${{ secrets.ALERT_NTFY_TOPIC }}
+          ALERT_NTFY_URL: ${{ secrets.ALERT_NTFY_URL }}
+          ALERT_NTFY_TOKEN: ${{ secrets.ALERT_NTFY_TOKEN }}

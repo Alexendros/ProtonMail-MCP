@@ -41,7 +41,16 @@ MCP_ALLOWED_ORIGINS=https://tu-dashboard.example
 
 # Logging
 LOG_LEVEL=info
+
+# Alertas ntfy (Organization secrets / pass alerts/ntfy — ver docs/alerting.md)
+# ALERT_NTFY_TOPIC=…
+# ALERT_NTFY_URL=https://ntfy.sh
+# ALERT_NTFY_TOKEN=   # opcional
+# ALERTS_ENABLED=true
+# ALERT_MIN_SEVERITY=warning
 ```
+
+El compose ya reenvía `ALERT_NTFY_*` al contenedor `agent`. En el host de despliegue, exporta el topic desde `pass` o desde los Organization secrets (no los pegues en el repo).
 
 ### Allowlist vacía en producción = arranque rechazado
 
