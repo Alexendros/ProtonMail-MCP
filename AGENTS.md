@@ -138,7 +138,7 @@ ADRs in [`docs/adr/`](./docs/adr/). Related: [ARCHITECTURE.md](./ARCHITECTURE.md
 
 ## Learned Workspace Facts
 
-- Los secretos de CI/integración viven en GitHub Actions Secrets (y environments), no en `.env` ni archivos locales del repo; `.env` está en `.gitignore`.
+- Los secretos de CI/integración viven en GitHub **Organization secrets** (y environments), no en `.env` ni archivos locales del repo; `.env` está en `.gitignore`. Mail: `PROTON_BRIDGE_USER` / `PROTON_BRIDGE_PASS` / `PROTON_MAIL_FROM`. Alertas ntfy (opcionales): `ALERT_NTFY_TOPIC`, `ALERT_NTFY_URL`, `ALERT_NTFY_TOKEN` — ver `docs/alerting.md`.
 - Repo GitHub: `Iniciativas-Alexendros/agent-protonsuite` (paquete `@alexendros/protonsuite-agent`).
 - Canon documental: `CONSTITUTION.md` (suprema) → `AGENTS.md` (operativo) → ADRs; no reabrir ADRs aceptados.
 - Calendar MCP queda detrás de `PROTON_CALENDAR_EXPERIMENTAL` (stub hasta Bridge CalDAV / ADR-005).

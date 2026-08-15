@@ -87,6 +87,13 @@ services:
       PROTON_PASS_BACKEND: ${PROTON_PASS_BACKEND:-pass}
       PROTON_PASS_STORE_DIR: ${PROTON_PASS_STORE_DIR:-/home/node/.password-store}
       GOPASS_STORE_DIR: ${GOPASS_STORE_DIR:-}
+      # Alertas (opcional — preferir Organization secrets ALERT_NTFY_*)
+      ALERTS_ENABLED: ${ALERTS_ENABLED:-true}
+      ALERT_MIN_SEVERITY: ${ALERT_MIN_SEVERITY:-warning}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      ALERT_NTFY_TOPIC: ${ALERT_NTFY_TOPIC:-}
+      ALERT_NTFY_URL: ${ALERT_NTFY_URL:-https://ntfy.sh}
+      ALERT_NTFY_TOKEN: ${ALERT_NTFY_TOKEN:-}
       # Drive (CLI oficial)
       DRIVE_ENABLED: ${DRIVE_ENABLED:-true}
       DRIVE_CLI_BIN: ${DRIVE_CLI_BIN:-/usr/local/bin/proton-drive}
