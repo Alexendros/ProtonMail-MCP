@@ -1,3 +1,5 @@
+> **Estado: superseded** · Archivado 2026-08-15. No es fuente de verdad. Ver [docs/archive/README.md](../../README.md) y ADRs vigentes.
+
 # Plan Estratégico Post-Cobertura
 
 > **For agentic workers:** Plan de análisis y priorización, no de implementación inmediata. Cada sección propone una fase independiente ejecutable en su propio worktree.

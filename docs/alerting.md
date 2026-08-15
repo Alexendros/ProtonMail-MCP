@@ -1,6 +1,10 @@
 # Alertas de contenido y seguridad
 
-Proton Mail Agent incluye un subsistema de alertas que analiza el contenido de los correos (sin enviarlo a terceros) y emite avisos cuando detecta patrones de riesgo o categorías sensibles.
+Proton Suite Agent incluye un subsistema de alertas que analiza el contenido de
+los correos (sin enviarlo a terceros) y emite avisos cuando detecta patrones de
+riesgo o categorías sensibles.
+
+Implementación: [`src/alerts/`](../src/alerts/) — sinks **file**, **webhook** y **ntfy**.
 
 ## Qué detecta
 
@@ -26,15 +30,25 @@ Además, el sistema detecta amenazas específicas:
 ## Configuración
 
 ```bash
-ALERT_WEBHOOK_URL=https://hooks.example.com/protonsuite-agent
+ALERTS_ENABLED=true
 ALERT_MIN_SEVERITY=warning   # info | warning | alert | critical
 ALERT_LOG_DIR=logs
-ALERTS_ENABLED=true
+
+# Webhook genérico (Discord/Slack-compatible POST JSON)
+ALERT_WEBHOOK_URL=https://hooks.example.com/protonsuite-agent
+
+# ntfy (opcional) — requiere topic; URL por defecto https://ntfy.sh
+# ALERT_NTFY_TOPIC=protonsuite-alerts
+# ALERT_NTFY_URL=https://ntfy.sh
+# ALERT_NTFY_TOKEN=tk_...
 ```
 
-- `ALERT_WEBHOOK_URL` (opcional): recibe un POST JSON por cada alerta que alcance `ALERT_MIN_SEVERITY`.
-- `ALERT_LOG_DIR`: directorio donde se escriben `alerts-YYYY-MM-DD.jsonl` y `audit-YYYY-MM-DD.jsonl`.
-- `ALERT_MIN_SEVERITY`: filtro de severidad para webhook y fichero; `stderr` refleja todo si `LOG_LEVEL` lo permite.
+- `ALERT_WEBHOOK_URL` (opcional): POST JSON por cada alerta ≥ `ALERT_MIN_SEVERITY`.
+- `ALERT_NTFY_TOPIC` (opcional): activa el sink ntfy (`src/alerts/ntfy.ts`).
+- `ALERT_NTFY_URL` (opcional): servidor ntfy (default `https://ntfy.sh`).
+- `ALERT_NTFY_TOKEN` (opcional): bearer para topics privados.
+- `ALERT_LOG_DIR`: `alerts-YYYY-MM-DD.jsonl` y `audit-YYYY-MM-DD.jsonl`.
+- `ALERT_MIN_SEVERITY`: filtro para webhook/ntfy/fichero; `stderr` sigue el `LOG_LEVEL`.
 
 ## Formato del webhook
 
@@ -56,10 +70,11 @@ ALERTS_ENABLED=true
 
 ## Privacidad
 
-- No se envían cuerpos de correo completos al webhook, solo metadatos y UIDs.
+- No se envían cuerpos de correo completos al webhook/ntfy, solo metadatos y UIDs.
 - El análisis ocurre localmente sobre el texto ya descifrado por Bridge.
 - El agente no envía correos a servicios de clasificación externos.
 
 ## Integración con clientes MCP
 
-La tool `proton_agent_plan` devuelve el plan de organización y alertas sin aplicar cambios. Un cliente MCP puede llamarla para mostrar alertas al usuario antes de que este ejecute `agent:organize`.
+La tool `proton_agent_plan` devuelve el plan de organización y alertas sin aplicar
+cambios. Un cliente MCP puede mostrarla al usuario antes de `agent:organize`.

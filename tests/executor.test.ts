@@ -74,8 +74,11 @@ const { mockPassClientFns, mockDriveClientFns, mockDriveAuditorFns, mockBinaries
     audit: vi.fn().mockResolvedValue({
       storeOk: true, totalEntries: 5,
       weakPasswords: ['servicios/old'], duplicates: [], staleEntries: [],
+      rotationPlan: [{ path: 'servicios/old', reason: 'weak', action: 'regenerate' }],
       recommendations: ['Regenerar contrase\u00f1as d\u00e9biles'],
     }),
+    generate: vi.fn().mockResolvedValue({ path: 'servicios/old', length: 24 }),
+    getBackendBinary: vi.fn().mockReturnValue('pass'),
   },
   mockDriveClientFns: {
     stagingDir: '/tmp/staging',
@@ -255,6 +258,28 @@ describe('runAgent · pass-audit', () => {
     await runAgent('pass-audit')
     expect(mockPassClientFns.audit).toHaveBeenCalled()
     expect(mockLogFns.info).toHaveBeenCalledWith('pass-audit report', expect.objectContaining({ totalEntries: 5 }))
+  })
+
+  it('en dry-run registra rotation plan sin regenerar', async () => {
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withPassEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: true },
+    })
+    await runAgent('pass-audit')
+    expect(mockLogFns.info).toHaveBeenCalledWith(
+      'pass-audit rotation plan (dry-run)',
+      expect.objectContaining({ items: expect.any(Array) }),
+    )
+    expect(mockPassClientFns.generate).not.toHaveBeenCalled()
+  })
+
+  it('sin dry-run regenera entradas del rotationPlan', async () => {
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withPassEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: false },
+    })
+    await runAgent('pass-audit')
+    expect(mockPassClientFns.generate).toHaveBeenCalledWith('servicios/old')
   })
 
   it('exit(2) cuando Pass no habilitado', async () => {

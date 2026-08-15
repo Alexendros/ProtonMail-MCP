@@ -99,6 +99,28 @@ curl -X POST https://tu-dominio.example/mcp \
 
 Una respuesta JSON-RPC con `result.serverInfo` confirma que el bearer y el `Origin` están bien y el MCP responde.
 
+## 5b. Pass en Docker Compose
+
+El `docker-compose.yml` monta volúmenes `pass-data` (`/home/node/.password-store`)
+y `gnupg-data` (`/home/node/.gnupg`) para el servicio `agent`.
+
+```bash
+# En el host / .env del compose:
+PROTON_PASS_ENABLED=true
+PROTON_PASS_BACKEND=pass          # o gopass
+PROTON_PASS_STORE_DIR=/home/node/.password-store
+# GOPASS_STORE_DIR=...            # si backend=gopass
+```
+
+Inicializa el store una vez (gpg + pass) dentro del contenedor o copia un store
+existente al volumen. Ver también [`pass-audit` playbook](../playbooks/pass-audit.md).
+
+Auditoría (dry-run):
+
+```bash
+docker compose exec agent node dist/agent-cli.js pass-audit
+```
+
 ## 6. Registro en un cliente MCP remoto
 
 Con el endpoint HTTP verificado, regístralo en tu cliente MCP como Remote MCP Server:

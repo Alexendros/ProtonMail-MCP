@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# HTTP MCP handshake example for Proton Mail Agent
+# HTTP MCP handshake example for Proton Suite Agent
 #
 # This script performs a minimal MCP initialize handshake against a remote
-# Proton Mail Agent HTTP endpoint. It stores the returned Mcp-Session-Id and uses
+# Proton Suite Agent HTTP endpoint. It stores the returned Mcp-Session-Id and uses
 # it to call tools/list. Adapt it to your deployment URL and token.
 # ---------------------------------------------------------------------------
 set -euo pipefail

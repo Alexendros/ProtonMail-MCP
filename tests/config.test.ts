@@ -263,6 +263,19 @@ describe("loadConfig · env validation", () => {
     const cfg = loadConfig();
     expect(cfg.products.pass.enabled).toBe(true);
     expect(cfg.products.pass.storeDir).toBe("~/.password-store");
+    expect(cfg.products.pass.backend).toBe("pass");
+  });
+
+  it("pass backend gopass usa GOPASS_STORE_DIR", () => {
+    process.env.PROTON_BRIDGE_USER = "a@b.com";
+    process.env.PROTON_BRIDGE_PASS = "x";
+    process.env.PROTON_MAIL_FROM = "a@b.com";
+    process.env.PROTON_PASS_ENABLED = "true";
+    process.env.PROTON_PASS_BACKEND = "gopass";
+    process.env.GOPASS_STORE_DIR = "/tmp/gopass-store";
+    const cfg = loadConfig();
+    expect(cfg.products.pass.backend).toBe("gopass");
+    expect(cfg.products.pass.storeDir).toBe("/tmp/gopass-store");
   });
 
   it("calendar can be enabled", () => {

@@ -1,7 +1,7 @@
 # 0003. Extracción de puertos y adaptadores (Ports & Adapters / Hexagonal)
 
 - Estado: accepted
-- Fecha: 2026-07 (refactor en progreso en working tree)
+- Fecha: 2026-07 — revisado 2026-08-15 (split `src/server/*` cerrado)
 - Decisores: Alejandro · Iniciativas Alexendros
 - Etiquetas: arquitectura, separación-de-capas, testabilidad
 
@@ -20,12 +20,12 @@ implementaciones concretas (adaptadores) se inyectan por el contenedor
 
 ¿Qué fuerza la decisión?
 
-- La arquitectura actual (pre-refactor) dejaba las implementaciones (`ImapClient`)
-  importadas directamente por `src/server.ts`, dificultando el mock.
-- El refactor en progreso introduce `src/clients/interfaces.ts` con
-  `IImapClient`, `ISmtpClient`, `IDriveClient`, `IPassClient` y hace que
-  `src/server/*.ts` reciban los puertos vía `deps` (inyección de dependencias).
-- La cobertura es del 98%: el refactor no debe degradarla.
+- Antes del split, las implementaciones (`ImapClient`) se importaban
+  directamente desde un `server.ts` monolítico, dificultando el mock.
+- El layout actual usa `src/clients/interfaces.ts`
+  (`IImapClient`, `ISmtpClient`, `IDriveClient`, `IPassClient`,
+  `ICalendarAdapter`) y `src/server/*.ts` con inyección vía `deps`.
+- El split está **cerrado** (2026-08); la cobertura debe mantenerse ≥98%.
 
 Drivers de la decisión:
 

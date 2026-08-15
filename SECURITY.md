@@ -47,7 +47,7 @@ Email `security@alexendros.me` (PGP key in the website). Do not open public GitH
 | T14 | **Pass vault enumeration via token leak** | Medium | Critical — attacker maps entire credential inventory | `proton_pass_list` returns only entry names, never values; rate limit; require explicit confirmation for full vault listing |
 | T15 | **Pass store injection via malicious entry** | Low | High — attacker plants credential in vault | Validate paths against disallowed characters; never accept raw user input for write without operator confirmation |
 | T16 | **Calendar event injection** (hostile payload in event description) | Medium | High | Sanitize descriptions before processing; no auto-execution based on event content; stub-only until backend available |
-| T17 | **Drive file enumeration** (token leak exposes full file tree) | Medium | High | Rate-limit on Drive tools; never expose absolute paths; stub-only until OAuth integration complete |
+| T17 | **Drive file enumeration** (CLI auth or token leak exposes file tree) | Medium | High | Rate-limit on Drive tools; never expose host absolute paths in responses; auth lives in `proton-drive` CLI config (`~/.config/proton-drive`), not in this server; no OAuth tokens stored here (ADR-006) |
 | T18 | **Cross-service correlation leak** (usage patterns across Mail/Pass/Calendar/Drive reveal sensitive metadata) | Low | Medium | Do not include cross-referenced metadata in individual tool responses; only expose aggregation in `proton_suite_status` |
 
 ---

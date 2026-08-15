@@ -11,7 +11,13 @@ export function registerPassTools(
 ) {
   const { cfg, log } = deps
   if (!cfg.products.pass.enabled) return
-  const passClient = new PassClient({ storeDir: cfg.products.pass.storeDir }, log)
+  const passClient = new PassClient(
+    {
+      storeDir: cfg.products.pass.storeDir,
+      backend: cfg.products.pass.backend ?? 'pass',
+    },
+    log,
+  )
 
   server.registerTool(
     'proton_pass_list',

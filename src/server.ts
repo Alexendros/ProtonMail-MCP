@@ -51,7 +51,10 @@ export function buildServer(
   let passwordResolver: () => Promise<string>
   if (cfg.products.pass.enabled && bridgeCfg.passPath) {
     const passClient = new PassClient(
-      { storeDir: cfg.products.pass.storeDir },
+      {
+        storeDir: cfg.products.pass.storeDir,
+        backend: cfg.products.pass.backend ?? 'pass',
+      },
       log,
     )
     const passPath = bridgeCfg.passPath
@@ -110,7 +113,13 @@ export function buildServer(
 
   let passClient: PassClient | undefined
   if (cfg.products.pass.enabled) {
-    passClient = new PassClient({ storeDir: cfg.products.pass.storeDir }, log)
+    passClient = new PassClient(
+      {
+        storeDir: cfg.products.pass.storeDir,
+        backend: cfg.products.pass.backend ?? 'pass',
+      },
+      log,
+    )
   }
 
   registerPassTools(server, { cfg, log })

@@ -32,8 +32,8 @@ El árbol de dependencias directas se revisa periódicamente para garantizar la 
 
 ### Verificación
 
-- `npm run license-check` — verifica el árbol directo completo contra la allowlist.
-- `npm run license-check:prod` — verifica solo dependencias de producción.
+- `pnpm run license-check` — verifica el árbol directo completo contra la allowlist.
+- `pnpm run license-check:prod` — verifica solo dependencias de producción.
 
 ## Cambio de licencia respecto a versiones anteriores
 

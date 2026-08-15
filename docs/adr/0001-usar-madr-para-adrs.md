@@ -1,56 +1,56 @@
-# NNNN. Título de la decisión
+# 0001. Usar MADR para Architecture Decision Records
 
-- Estado: proposed
-- Fecha: 2026-MM-DD
+- Estado: accepted
+- Fecha: 2026-07 — revisado 2026-08-15
 - Decisores: Alejandro · Iniciativas Alexendros
-- Etiquetas: arquitectura
+- Etiquetas: documentación, gobernanza
 
 > Texto en formato MADR 4.0.0 · https://adr.github.io/madr/
 
 ## Contexto y planteamiento del problema
 
-Describe el problema y su contexto. ¿Qué fuerza la decisión? ¿Qué
-restricciones existen?
+El proyecto necesita registrar decisiones estructurales (transporte, puertos,
+dry-run, Calendar, Drive) de forma estable, enlazable y revisable por agentes
+y humanos. Un ADR suelto sin plantilla produce formatos inconsistentes; un
+único `DECISIONS.md` monolítico (estilo otros repos) dificulta diffs y CI
+parciales en un MCP con muchos dominios.
 
-## Drivers de la decisión
+¿Qué fuerza la decisión?
 
-- (driver 1)
-- (driver 2)
+- Ya existen ADRs 0002–0006 en `docs/adr/`.
+- Se requiere plantilla reutilizable y estado explícito (accepted / superseded).
+- La constitución del proyecto exige ADR ante cambios de seguridad o arquitectura.
+
+Drivers:
+
+- Trazabilidad ROADMAP → ADR.
+- Diffs por decisión.
+- Compatibilidad con agentes que leen un archivo por decisión.
 
 ## Opciones consideradas
 
-- (opción A)
-- (opción B)
-- (opción C)
+- (opción A) ADRs MADR como archivos `docs/adr/NNNN-*.md`.
+- (opción B) Un solo `DECISIONS.md` con `<details>`.
+- (opción C) Solo issues/PRs de GitHub como registro.
 
 ## Resultado de la decisión
 
-Opción elegida: "(opción A)", porque (justificación).
+Opción elegida: **(opción A)**. Plantilla canónica: [`TEMPLATE.md`](./TEMPLATE.md).
 
 ### Consecuencias positivas
 
-- (consecuencia 1)
+- Un archivo = una decisión; enlaces estables desde AGENTS/ARCHITECTURE.
+- Formato homogéneo (estado, contexto, opciones, consecuencias).
 
 ### Consecuencias negativas
 
-- (consecuencia 1)
+- Hay que mantener numeración y índice mental (mitigado por `docs/README.md`).
 
 ## Validación
 
-¿Cómo verificaremos que la decisión funciona como esperamos?
-
-## Pros y contras de las opciones
-
-### (opción A)
-
-- Bueno, porque...
-- Malo, porque...
-
-### (opción B)
-
-- Bueno, porque...
-- Malo, porque...
+Nuevos ADRs siguen MADR; ADR-0006 se normalizó al mismo formato (2026-08-15).
 
 ## Más información
 
-- Enlaces a issues, PRs, documentos relacionados.
+- https://adr.github.io/madr/
+- [CONSTITUTION.md](../../CONSTITUTION.md) §2

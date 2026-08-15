@@ -1,65 +1,55 @@
 ---
 name: pass-audit
-description: Auditoría de fortaleza del vault de Proton Pass — contraseñas débiles, duplicados y rotación pendiente.
+description: Auditoría de fortaleza del vault Pass (pass|gopass) — débiles, duplicados, stale y plan de rotación.
 ---
 
-# Auditoría de Proton Pass
+# Auditoría de Pass
 
 ## Objetivo
 
-Revisar la fortaleza del vault de contraseñas de Proton Pass: contraseñas débiles, duplicadas y entradas que necesitan rotación.
+Revisar la fortaleza del vault: contraseñas débiles, duplicadas, entradas
+stale (mtime antiguo) y un `rotationPlan` accionable.
 
 ## Prerrequisitos
 
-- `pass` CLI instalado (`apt install pass`).
-- `PROTON_PASS_ENABLED=true` en el entorno.
-- `PROTON_PASS_STORE_DIR` apuntando al password store (default: `~/.password-store`).
+- `pass` o `gopass` instalado.
+- `PROTON_PASS_ENABLED=true`.
+- `PROTON_PASS_STORE_DIR` (o `GOPASS_STORE_DIR` si `PROTON_PASS_BACKEND=gopass`).
 
 ## Flujo
 
-### 1. Verificar conectividad
+### 1. Dry-run (recomendado)
 
 ```bash
-npx -y @alexendros/protonsuite-agent pass-audit
+AGENT_DRY_RUN=true pnpm exec protonsuite-agent pass-audit
+# o: npx -y @alexendros/protonsuite-agent pass-audit
 ```
 
 ### 2. Revisar el informe
 
-El agente emite:
+- Total de entradas.
+- Débiles / duplicados / stale.
+- `rotationPlan`: `{ path, reason, action: regenerate }`.
 
-- **Total de entradas** en el vault.
-- **Contraseñas débiles** (< 12 caracteres o poca variedad de tipos).
-- **Entradas duplicadas** (misma contraseña en múltiples paths).
-- **Recomendaciones** priorizadas.
+### 3. Aplicar rotación (explícito)
 
-### 3. Regenerar contraseñas débiles
+```bash
+AGENT_DRY_RUN=false pnpm exec protonsuite-agent pass-audit
+```
 
-Para cada entrada débil detectada, usar la tool `proton_pass_generate` desde cualquier cliente MCP:
+Regenera solo las entradas del plan (valores nunca se loguean).
+
+### 4. Alternativa MCP
 
 ```
 proton_pass_generate path="servicios/entry-debil" length=24
 ```
 
-La tool confirma `{generated: true, path, length}` sin revelar el valor.
-
-### 4. Unificar duplicados
-
-Si dos entradas comparten contraseña:
-
-1. Decidir cuál es la fuente canónica.
-2. Regenerar las entradas derivadas con `proton_pass_generate`.
-3. Actualizar los servicios correspondientes.
-
 ## Verificación
 
-```bash
-npx -y @alexendros/protonsuite-agent pass-audit
-```
-
-El informe debe mostrar 0 contraseñas débiles y 0 duplicados.
+Repite el dry-run: 0 débiles / 0 duplicados / plan vacío (salvo stale por política).
 
 ## Seguridad
 
-- Las contraseñas **nunca** se exponen en logs, stdout, o respuestas MCP.
-- La auditoría evalúa localmente — sin envío a servicios externos.
-- Las contraseñas generadas usan `crypto.randomBytes` del runtime Node.js.
+- Valores NUNCA en logs ni respuestas MCP ([CONSTITUTION.md](../CONSTITUTION.md) §5).
+- Evaluación local; dry-run por defecto (ADR-004).
