@@ -1,6 +1,6 @@
 ---
 name: setup-checklist
-description: Verifica las precondiciones antes de operar Proton Mail Agent.
+description: Verifica las precondiciones antes de operar Proton Suite Agent.
 ---
 
 # Checklist de puesta en marcha
@@ -31,10 +31,10 @@ description: Verifica las precondiciones antes de operar Proton Mail Agent.
 
 ## Para desarrollo
 
-- [ ] `npm install` completado.
-- [ ] `npm run typecheck` verde.
-- [ ] `npm test` verde.
-- [ ] `npm run build` genera `dist/`.
-- [ ] `npm run smoke` verde (no requiere Bridge real).
-- [ ] `npm run license-check` verde.
-- [ ] `npm run license-check:prod` verde.
+- [ ] `pnpm install` completado.
+- [ ] `pnpm run typecheck` verde.
+- [ ] `pnpm test` verde.
+- [ ] `pnpm run build` genera `dist/`.
+- [ ] `pnpm run smoke` verde (no requiere Bridge real).
+- [ ] `pnpm run license-check` verde.
+- [ ] `pnpm run license-check:prod` verde.

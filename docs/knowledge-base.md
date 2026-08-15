@@ -1,6 +1,6 @@
 # Knowledge base de clasificación de correos
 
-Proton Mail Agent usa un knowledge base embebido de reglas heurísticas para clasificar correos en categorías profesionales y detectar riesgos. Este documento describe las convenciones y criterios que el agente aplica.
+Proton Suite Agent usa un knowledge base embebido de reglas heurísticas para clasificar correos en categorías profesionales y detectar riesgos. Este documento describe las convenciones y criterios que el agente aplica.
 
 ## Filosofía de la clasificación
 
@@ -100,6 +100,6 @@ Las reglas viven en `src/alerts/rules.ts`. Para añadir una categoría:
 
 1. Añade una entrada al array `RULES` con `category`, `severity`, `suggestedFolder`, `suggestedLabels` y `patterns`.
 2. Para amenazas específicas, añade una entrada al array `checks` de `detectThreats`.
-3. Ejecuta `npm test` y añade un caso de test en `tests/alerts.test.ts`.
+3. Ejecuta `pnpm test` y añade un caso de test en `tests/alerts.test.ts`.
 
 No uses expresiones regulares que procesen cuerpos completos de correo de forma insegura; mantén los patrones orientados a palabras clave y estructuras.

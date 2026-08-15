@@ -1,31 +1,94 @@
 # Proton Suite Agent
 
+Abrir cuando: Orientación, pulso y enrutado.
+Aprobado: 15 de agosto de 2026
+Audiencia: Agente, Dirección, Usuarios
+Autoridad: Lectura
+Clase: Obligatorio
+Días para revisión: 14
+En repo: Sí
+Estado: Vigente
+Orden: 1
+Propósito: Punto de entrada: pulso, quickstart y qué leer después.
+Reforma: Operativa
+Responsable: Alexendros
+Revisión: 29 de agosto de 2026
+Rol: Entrada
+Ruta: ./README.md
+
 [![CI](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/ci.yml/badge.svg)](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/codeql.yml/badge.svg)](https://github.com/Iniciativas-Alexendros/agent-protonsuite/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Iniciativas-Alexendros/agent-protonsuite/badge)](https://scorecard.dev/viewer/?uri=github.com/Iniciativas-Alexendros/agent-protonsuite)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](./docs/coverage-report.md)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A522-brightgreen.svg)](./package.json)
 [![npm](https://img.shields.io/npm/v/@alexendros/protonsuite-agent)](https://www.npmjs.com/package/@alexendros/protonsuite-agent)
 
-**MCP server** multi-producto para **Proton Suite**: Mail (Bridge IMAP/SMTP), Pass (pass-cli), Drive (CLI oficial) y Calendar (CalDAV stub). Un agente puede operar el buzón, gestionar contraseñas, sincronizar archivos y clasificar correo — todo sin salir de tu máquina.
+<aside>
+📌
 
-| Modo                | Descripción                                                 |
-| ------------------- | ----------------------------------------------------------- |
-| **stdio** (default) | Sin exponer nada a la red. Ideal para agentes IA locales.   |
-| **streamable HTTP** | Bearer auth + origin allowlist. Para despliegue con Docker. |
+**Propósito**
+
+Punto de entrada de lectura. Te dice el pulso, cómo arrancar y qué documento abrir después. Lo no negociable vive en [CONSTITUTION.md](./CONSTITUTION.md).
+
+</aside>
+
+---
+
+# Estado en una mirada
+
+**Pulso:** 15 de agosto de 2026 · `v1.2.1`
+
+**Fase activa:** Fase 1 (Pass / agente / DX) checklist cerrada · siguiente: Fase 2 (Calendar, bloqueada). Ver [ROADMAP.md](./ROADMAP.md).
+
+**Métricas:** 47 tools por defecto (50 con Calendar experimental) · 958 tests · cobertura ~98% (gate 95%).
+
+| Capa | Estado |
+| --- | --- |
+| Mail (Bridge IMAP/SMTP) | Operativo |
+| Pass (`pass` / `gopass`) | Operativo |
+| Drive (`proton-drive` CLI) | Operativo (ADR-006) |
+| Calendar | Stub hasta CalDAV en Bridge (ADR-005) |
+| Documentación canónica | Subfase 0 |
+
+**MCP server** multi-producto para **Proton Suite**: Mail, Pass, Drive y Calendar (stub). Un agente opera el buzón, gestiona contraseñas y sincroniza archivos — local, sin exfiltrar contenido E2E.
+
+| Modo | Descripción |
+| --- | --- |
+| **stdio** (default) | Sin exponer red. Ideal para agentes IA locales. |
+| **streamable HTTP** | Bearer auth + origin allowlist. Docker / reverse proxy. |
+
+---
+
+# Qué leer a continuación
+
+| Si necesitas | Abre | Aún no |
+| --- | --- | --- |
+| Lo no negociable | [CONSTITUTION.md](./CONSTITUTION.md) | ROADMAP entero |
+| Orden de trabajo y fases | [ROADMAP.md](./ROADMAP.md) | Código |
+| Implementar como agente | [AGENTS.md](./AGENTS.md) | ARCHITECTURE completo |
+| Capas y flujos | [ARCHITECTURE.md](./ARCHITECTURE.md) | Código |
+| Threat model | [SECURITY.md](./SECURITY.md) | — |
+| Contribuir / PR | [CONTRIBUTING.md](./CONTRIBUTING.md) | — |
+| Contrato de tools MCP | [docs/api/mcp-tools.md](./docs/api/mcp-tools.md) | — |
+| Decisiones (por qué) | [docs/adr/](./docs/adr/) | — |
+| Índice de guías | [docs/README.md](./docs/README.md) | — |
+| Playbooks + prompts | [playbooks/README.md](./playbooks/README.md) | — |
+
+**Primera sesión:** este README → [AGENTS.md](./AGENTS.md) §§ TL;DR + ficha → fase activa en [ROADMAP.md](./ROADMAP.md) → ADR/ancla citada.
 
 ---
 
 ## Quickstart
 
-**Prerrequisitos:** Node ≥ 22, Proton Mail Bridge corriendo en local, `pass` + `gpg` para contraseñas.
+**Prerrequisitos:** Node ≥ 22, pnpm, Proton Mail Bridge en local, `pass` o `gopass` + `gpg` para contraseñas.
 
 ### 1. Instalar y compilar
 
 ```bash
 git clone https://github.com/Iniciativas-Alexendros/agent-protonsuite.git
 cd agent-protonsuite
-npm install && npm run build && npm run smoke
+pnpm install && pnpm build && pnpm run smoke
 ```
 
 ### 2. Configurar variables de entorno
@@ -62,141 +125,116 @@ export PROTON_MAIL_FROM=you@proton.me
 ### 4. Organizar el buzón (dry-run)
 
 ```bash
-AGENT_DRY_RUN=true npx -y @alexendros/protonsuite-agent organize
+AGENT_DRY_RUN=true pnpm exec protonsuite-agent organize
+# o: npx -y @alexendros/protonsuite-agent organize
 ```
 
-El agente analiza el inbox y presenta un plan de carpetas, etiquetas y alertas **sin aplicar cambios**. Desactiva `AGENT_DRY_RUN` para ejecutar.
+El agente analiza el inbox y presenta un plan **sin aplicar cambios**. Desactiva `AGENT_DRY_RUN` solo tras revisión.
 
 ---
 
 ## Tools MCP
 
-25 tools organizadas por producto. Todas aceptan `response_format: "markdown" | "json"`.
+47 tools por defecto (50 con Calendar experimental). Lectura: `response_format: "markdown" | "json"`.
 
-| Producto     | Tools | Resumen                                                                   |
-| ------------ | ----- | ------------------------------------------------------------------------- |
-| **Mail**     | 14    | List, search, read, send, reply, forward, flag, move, delete, attachments |
-| **Pass**     | 4     | List, get (sin exponer valores), generate, health                         |
-| **Drive**    | 8     | Status, list, download, upload, share, audit, organize, format report     |
-| **Calendar** | stub  | Registradas pero `{available: false}` hasta CalDAV vía Bridge             |
-| **Suite**    | 1     | Estado unificado de todos los productos                                   |
+| Producto | Tools | Resumen |
+| --- | --- | --- |
+| **Mail** | 14 | List, search, read, send, reply, forward, flag, move, delete, attachments |
+| **Pass** | 4+ | List, get (sin valores), generate, health; audit vía agente |
+| **Drive** | 8+ | Status, list, download, upload, share, audit, organize |
+| **Calendar** | stub | `{available: false}` hasta CalDAV vía Bridge (ADR-005) |
+| **Suite / Bridge / Ecosystem / Agent** | resto | Estado unificado, Bridge, binarios, plan de agente |
 
-> Ver tabla completa en [`docs/agent-quickstart.md`](./docs/agent-quickstart.md#tools-mcp).
+Contrato generado: [`docs/api/mcp-tools.md`](./docs/api/mcp-tools.md). Guía: [`docs/agent-quickstart.md`](./docs/agent-quickstart.md).
 
 ---
 
 ## Agente
 
-| Goal                      | Pipeline                                                      |
-| ------------------------- | ------------------------------------------------------------- |
-| `setup`                   | Verifica Bridge (IMAP + SMTP), envía email de prueba          |
-| `organize`                | Clasifica inbox, propone carpetas/etiquetas, detecta amenazas |
-| `monitor`                 | Solo lectura — presenta alertas sin modificar                 |
-| `alert`                   | Inspecciona amenazas de seguridad                             |
-| `pass-audit`              | Fortaleza de contraseñas, duplicados, rotación                |
-| `suite-status`            | Reporte unificado cross-producto                              |
-| `discover` / `check-imap` | Verificación rápida de conectividad                           |
+| Goal | Pipeline |
+| --- | --- |
+| `setup` | Verifica Bridge (IMAP + SMTP) |
+| `organize` | Clasifica inbox, carpetas/etiquetas, amenazas |
+| `monitor` / `alert` | Solo lectura — alertas |
+| `pass-audit` | Fortaleza, duplicados, plan de rotación (dry-run) |
+| `suite-status` | Reporte cross-producto |
+| `discover` / `check-imap` | Conectividad |
+| Drive goals | `drive-audit`, `drive-organize`, … |
 
 ### Drive CLI
 
 ```bash
-# Instalar (opcional)
 sudo wget -q 'https://proton.me/download/drive/cli/linux/proton-drive' \
   -O /usr/local/bin/proton-drive && sudo chmod +x /usr/local/bin/proton-drive
 proton-drive auth login
 ```
 
-Requiere `DRIVE_ENABLED=true` (default). Ver [`docs/drive-audit.md`](./docs/drive-audit.md) para configuración completa.
+Requiere `DRIVE_ENABLED=true` (default). Ver [`docs/drive-audit.md`](./docs/drive-audit.md).
 
 ---
 
 ## Despliegue
 
-### Docker
-
 ```bash
 docker compose up -d
 ```
 
-Ver [`docs/deployment-http-docker.md`](./docs/deployment-http-docker.md) para auth, allowlist y healthcheck.
-
-### Instalador Ubuntu
-
-```bash
-bash scripts/install.sh
-```
-
-Ver [`scripts/install.sh`](./scripts/install.sh) para la instalación interactiva completa.
+Ver [`docs/deployment-http-docker.md`](./docs/deployment-http-docker.md). Instalador: [`scripts/install.sh`](./scripts/install.sh).
 
 ---
 
 ## Documentación
 
-| Documento                                                            | Para quién           | Qué cubre                                         |
-| -------------------------------------------------------------------- | -------------------- | ------------------------------------------------- |
-| [`docs/human-quickstart.md`](./docs/human-quickstart.md)             | Usuarios no técnicos | Instalación paso a paso, Bridge, Pass, primer uso |
-| [`docs/agent-quickstart.md`](./docs/agent-quickstart.md)             | Agentes IA           | Tools, formatos de respuesta, ejemplos            |
-| [`docs/bridge-core.md`](./docs/bridge-core.md)                       | Todos                | Bridge headless, puertos, vault, troubleshooting  |
-| [`docs/deployment-http-docker.md`](./docs/deployment-http-docker.md) | DevOps               | Docker, auth, allowlist, healthcheck              |
-| [`docs/local-stdio-secrets.md`](./docs/local-stdio-secrets.md)       | Operadores           | Wrapper stdio sin secretos en disco               |
-| [`docs/alerting.md`](./docs/alerting.md)                             | Operadores           | Alertas de contenido, webhook, logs               |
-| [`docs/knowledge-base.md`](./docs/knowledge-base.md)                 | Todos                | Clasificación profesional y categorías            |
-| [`docs/drive-audit.md`](./docs/drive-audit.md)                       | Operadores           | Drive CLI, persistencia token, auditoría          |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md)                               | Desarrolladores      | Capas internas, modelo de amenazas                |
-| [`SECURITY.md`](./SECURITY.md)                                       | Auditores            | Controles activos y threat model                  |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md)                               | Contribuidores       | Convenciones, PRs, tests                          |
-
-### Conectores
-
-| Archivo                                                                        | Uso                                              |
-| ------------------------------------------------------------------------------ | ------------------------------------------------ |
-| [`connectors/stdio-npx.json`](./connectors/stdio-npx.json)                     | Config stdio genérica para cualquier cliente MCP |
-| [`connectors/stdio-wrapper.sh.example`](./connectors/stdio-wrapper.sh.example) | Wrapper seguro con resolución JIT de secretos    |
-| [`connectors/http-curl.sh.example`](./connectors/http-curl.sh.example)         | Handshake HTTP con curl                          |
-
-### Playbooks
-
-[`playbooks/`](./playbooks/) — workflows predefinidos: onboarding, organize inbox, triage, fraud detection, pass audit, daily briefing, setup checklist.
+| Documento | Para quién | Qué cubre |
+| --- | --- | --- |
+| [`CONSTITUTION.md`](./CONSTITUTION.md) | Todos | No negociables |
+| [`ROADMAP.md`](./ROADMAP.md) | Dirección / agente | Fases y criterios de salida |
+| [`AGENTS.md`](./AGENTS.md) | Agentes IA | Contrato operativo |
+| [`docs/human-quickstart.md`](./docs/human-quickstart.md) | Usuarios | Instalación paso a paso |
+| [`docs/agent-quickstart.md`](./docs/agent-quickstart.md) | Agentes IA | Tools y ejemplos |
+| [`docs/bridge-core.md`](./docs/bridge-core.md) | Operadores | Bridge headless |
+| [`docs/deployment-http-docker.md`](./docs/deployment-http-docker.md) | DevOps | Docker, auth, Pass en compose |
+| [`docs/local-stdio-secrets.md`](./docs/local-stdio-secrets.md) | Operadores | Wrapper JIT |
+| [`docs/alerting.md`](./docs/alerting.md) | Operadores | Webhook, ntfy, logs |
+| [`docs/drive-audit.md`](./docs/drive-audit.md) | Operadores | Drive CLI |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Desarrolladores | Capas y flujos |
+| [`SECURITY.md`](./SECURITY.md) | Auditores | Threat model |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Contribuidores | PRs, pnpm, tests |
+| [`playbooks/`](./playbooks/) | Operadores | Workflows + prompts |
 
 ---
 
 ## Calidad
 
 ```bash
-npm run typecheck   # TypeScript strict
-npm test            # Tests (Vitest)
-npm run coverage    # Coverage (v8 — 98.00% statements)
-npm run build       # Compilación
-npm run smoke       # Verificación stdio
-npm run knip        # Unused deps/exports
+pnpm run typecheck   # TypeScript strict
+pnpm test            # Vitest (953+)
+pnpm run coverage    # Coverage v8 — gate 95%, objetivo ≥98%
+pnpm run build       # tsc → dist/
+pnpm run smoke       # stdio initialize + tools/list
+pnpm run knip        # Unused deps/exports
+pnpm docs:check      # mcp-tools.md en sync
 ```
 
-### Seguridad
+### Seguridad (resumen)
 
 - Bearer timing-safe, origin allowlist, rate-limit 120/min/token.
-- Per-session HTTP transport, sesiones idle evicted a los 30 min.
-- Sin credenciales ni cuerpos de request en logs.
-- Pass nunca expone valores de secreto — solo `{found: true}`.
-- Dry-run por defecto en el agente.
-
----
+- HTTP per-session; idle eviction 30 min.
+- Pass nunca expone valores — solo `{found: true}`.
+- Dry-run por defecto en el agente ([CONSTITUTION.md](./CONSTITUTION.md) §4).
 
 ### Progreso de cobertura
 
-| Fecha | Statements | Branches | Tests | Hitos |
+| Fecha | Statements | Branches | Tests | Notas |
 |-------|-----------|----------|-------|-------|
-| Ago 2026 | **98.02%** | **95.35%** | — | Post-renovate cleanup, pipeline hardening |
-| Jul 2026 (Branch hunt) | **98.07%** | **93.63%** | 864 | diagnostics.ts 84%→96%, addresses.ts 90%→100%, pass.ts 87%→95% |
-| Jul 2026 (Ronda 3b) | 93.72% | — | 745 | server/drive.ts 89%→99%, http.ts +10 tests CORS/auth |
-| Jul 2026 (Ronda 2) | 92.68% | — | 692 | server.ts 73%→96%, smtp.ts 79%→98% |
-| Jul 2026 (post-merge) | 90.65% | 86.46% | 619 | Repo renombrado, PRs fusionados |
-| Jun 2026 (base) | 61.7% | — | 258 | Reporte inicial |
+| Ago 2026 | **~98%** | **~95%** | **953** | Subfase 0 + Fase 1 |
+| Jul 2026 | 98.07% | 93.63% | 864 | Branch hunt |
+| Jun 2026 | 61.7% | — | 258 | Base |
 
-*Conteo de tests canónico: `npx vitest run 2>&1 | grep -E 'Test Files|Tests'`.*
-
+*Conteo canónico: `pnpm test 2>&1 | grep -E 'Test Files|Tests'`.*
 
 ## Licencia
 
 [AGPL-3.0](./LICENSE) — Copyright 2026 Alejandro Domingo Agustí (Alexendros). Sin afiliación a Proton AG.
 
-Ver [`NOTICE.md`](./NOTICE.md) para dependencias y compatibilidad de licencias.
+Ver [`NOTICE.md`](./NOTICE.md) para dependencias.

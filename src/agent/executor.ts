@@ -122,19 +122,47 @@ const goalHandlers: Record<string, GoalHandler> = {
     })
   },
 
-  'pass-audit': async ({ cfg, log, alerts }) => {
+  'pass-audit': async ({ cfg, ctx, log, alerts }) => {
     if (!cfg.products.pass.enabled) {
       log.error('Proton Pass is not enabled. Set PROTON_PASS_ENABLED=true.')
       process.exit(2)
     }
     const { PassClient } = await import('../pass.js')
     const passClient = new PassClient(
-      { storeDir: cfg.products.pass.storeDir },
+      {
+        storeDir: cfg.products.pass.storeDir,
+        backend: cfg.products.pass.backend ?? 'pass',
+      },
       log,
     )
     const report = await passClient.audit()
-    log.info('pass-audit report', report)
-    alerts.audit('pass-audit', 'agent/executor', report)
+    log.info('pass-audit report', {
+      storeOk: report.storeOk,
+      totalEntries: report.totalEntries,
+      weak: report.weakPasswords.length,
+      duplicates: report.duplicates.length,
+      stale: report.staleEntries.length,
+      rotationPlan: report.rotationPlan.length,
+      backend: passClient.getBackendBinary(),
+    })
+    if (ctx.dryRun) {
+      log.info('pass-audit rotation plan (dry-run)', {
+        items: report.rotationPlan,
+      })
+    } else {
+      for (const item of report.rotationPlan) {
+        await passClient.generate(item.path)
+        log.info('pass-audit regenerated', {
+          path: item.path,
+          reason: item.reason,
+        })
+      }
+    }
+    alerts.audit('pass-audit', 'agent/executor', {
+      ...report,
+      dryRun: ctx.dryRun,
+      applied: !ctx.dryRun ? report.rotationPlan.length : 0,
+    })
   },
 
   'drive-audit': async ({ cfg, log, alerts }) => {

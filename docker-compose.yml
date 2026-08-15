@@ -59,10 +59,9 @@ services:
       proton-bridge:
         condition: service_healthy
     volumes:
-      # Volúmenes opcionales para Pass: montar el password store y claves GPG
-      # desde el host. Descomenta si usas PROTON_BRIDGE_PASS_PATH.
-      # - pass-data:/home/node/.password-store:ro
-      # - gnupg-data:/home/node/.gnupg:ro
+      # Pass: montar password-store y GPG (descomenta para Pass en contenedor).
+      - pass-data:/home/node/.password-store
+      - gnupg-data:/home/node/.gnupg
       # Persiste el token del CLI oficial (se genera con `proton-drive auth login`
       # una sola vez — ver docs/drive-audit.md).
       - drive-auth-data:/home/node/.config/proton-drive
@@ -85,6 +84,9 @@ services:
       MCP_ALLOWED_ORIGINS: ${MCP_ALLOWED_ORIGINS}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       PROTON_PASS_ENABLED: ${PROTON_PASS_ENABLED:-false}
+      PROTON_PASS_BACKEND: ${PROTON_PASS_BACKEND:-pass}
+      PROTON_PASS_STORE_DIR: ${PROTON_PASS_STORE_DIR:-/home/node/.password-store}
+      GOPASS_STORE_DIR: ${GOPASS_STORE_DIR:-}
       # Drive (CLI oficial)
       DRIVE_ENABLED: ${DRIVE_ENABLED:-true}
       DRIVE_CLI_BIN: ${DRIVE_CLI_BIN:-/usr/local/bin/proton-drive}
@@ -99,9 +101,8 @@ services:
 volumes:
   bridge-data:
   drive-auth-data:
-  # Volúmenes opcionales para Pass
-  # pass-data:
-  # gnupg-data:
+  pass-data:
+  gnupg-data:
 
 networks:
   proton-net:

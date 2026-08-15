@@ -1,9 +1,9 @@
 ---
 name: onboarding
-description: Puesta en marcha de Proton Mail Agent desde cero hasta el primer plan de organización.
+description: Puesta en marcha de Proton Suite Agent desde cero hasta el primer plan de organización.
 ---
 
-# Onboarding — Puesta en marcha de Proton Mail Agent
+# Onboarding — Puesta en marcha de Proton Suite Agent
 
 Objetivo: instalar el agente, verificar que habla con Proton Mail Bridge y dejarlo listo para operar de forma autónoma con supervisión humana.
 

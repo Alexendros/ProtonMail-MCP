@@ -1,3 +1,5 @@
+> **Estado: superseded** · Archivado 2026-08-15. No es fuente de verdad. Ver [docs/archive/README.md](../../README.md) y ADRs vigentes.
+
 # Proton Drive — Sincronización con rsync y Auditoría de Contenido
 
 **Fecha:** 2026-07-10  

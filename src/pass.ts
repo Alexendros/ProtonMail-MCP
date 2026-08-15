@@ -1,5 +1,5 @@
 /**
- * Proton Pass client via `pass` CLI (password-store Unix estándar).
+ * Proton Pass client via `pass` o `gopass` CLI (password-store compatible).
  *
  * Principios de seguridad — heredados del skill protonpass:
  *  1. Los valores NUNCA se loguean. `get()` retorna el secreto solo a callers
@@ -12,38 +12,46 @@
  *  5. `execFile` sin shell: sin interpolación de variables ni inyección de
  *     comandos. Los paths se validan contra un charset seguro.
  *
- * Backend: `pass` CLI (https://www.passwordstore.org/). Si en el futuro se
- * cambia a `gopass` u otro backend, la interfaz de PassClient se mantiene.
+ * Backends: `pass` (https://www.passwordstore.org/) o `gopass`
+ * (`PROTON_PASS_BACKEND=gopass`). La superficie de PassClient se mantiene.
  */
 import { execFile } from 'node:child_process'
 import { randomBytes, createHash } from 'node:crypto'
-import { readdir } from 'node:fs/promises'
+import { readdir, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { resolve as resolvePath } from 'node:path'
+import { join as joinPath, resolve as resolvePath } from 'node:path'
 
-async function execPass(
+export type PassBackend = 'pass' | 'gopass'
+
+export type PassExecFn = (
   args: string[],
   opts: { env: NodeJS.ProcessEnv; input?: string },
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const child = execFile('pass', args, { env: opts.env })
-    let stdout = ''
-    let stderr = ''
-    child.stdout?.on('data', (d) => (stdout += d))
-    child.stderr?.on('data', (d) => (stderr += d))
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve(stdout)
-        return
+) => Promise<string>
+
+/** Entradas sin rotación reciente (mtime del .gpg). Default: 365 días. */
+const STALE_MS_DEFAULT = 365 * 24 * 60 * 60 * 1000
+
+function createPassExec(binary: string): PassExecFn {
+  return async (args, opts) =>
+    new Promise((resolve, reject) => {
+      const child = execFile(binary, args, { env: opts.env })
+      let stdout = ''
+      let stderr = ''
+      child.stdout?.on('data', (d) => (stdout += d))
+      child.stderr?.on('data', (d) => (stderr += d))
+      child.on('close', (code) => {
+        if (code === 0) {
+          resolve(stdout)
+          return
+        }
+        reject(new Error(stderr.trim() || `${binary} exited with code ${code}`))
+      })
+      child.on('error', reject)
+      if (opts.input) {
+        child.stdin?.write(opts.input)
+        child.stdin?.end()
       }
-      reject(new Error(stderr.trim() || `pass exited with code ${code}`))
     })
-    child.on('error', reject)
-    if (opts.input) {
-      child.stdin?.write(opts.input)
-      child.stdin?.end()
-    }
-  })
 }
 
 const SAFE_PATH_RE = /^[a-zA-Z0-9._/-]+$/
@@ -57,6 +65,16 @@ export interface PassLogger {
 
 export interface PassClientOptions {
   storeDir: string
+  /** CLI backend. Default: `pass`. */
+  backend?: PassBackend
+  /** Max age before an entry is marked stale (ms). Default: 365d. */
+  staleAfterMs?: number
+}
+
+export interface PassRotationItem {
+  path: string
+  reason: 'weak' | 'duplicate' | 'stale'
+  action: 'regenerate'
 }
 
 export interface PassAuditResult {
@@ -65,23 +83,33 @@ export interface PassAuditResult {
   weakPasswords: string[]
   duplicates: string[]
   staleEntries: string[]
+  rotationPlan: PassRotationItem[]
   recommendations: string[]
   [key: string]: unknown
 }
 
 export class PassClient {
   private readonly storeDir: string
-  private readonly exec: typeof execPass
+  private readonly binary: string
+  private readonly staleAfterMs: number
+  private readonly exec: PassExecFn
 
   constructor(
     opts: PassClientOptions,
     private readonly log: PassLogger,
-    exec?: typeof execPass,
+    exec?: PassExecFn,
   ) {
     this.storeDir = opts.storeDir.startsWith('~')
       ? resolvePath(homedir(), opts.storeDir.slice(2))
       : resolvePath(opts.storeDir)
-    this.exec = exec ?? execPass
+    this.binary = opts.backend === 'gopass' ? 'gopass' : 'pass'
+    this.staleAfterMs = opts.staleAfterMs ?? STALE_MS_DEFAULT
+    this.exec = exec ?? createPassExec(this.binary)
+  }
+
+  /** Nombre del binario CLI (`pass` | `gopass`). */
+  getBackendBinary(): string {
+    return this.binary
   }
 
   // ---------------------------------------------------------------------------
@@ -190,6 +218,7 @@ export class PassClient {
         weakPasswords: [],
         duplicates: [],
         staleEntries: [],
+        rotationPlan: [],
         recommendations: [
           `Store no accesible: ${healthResult.error ?? 'error desconocido'}`,
         ],
@@ -200,8 +229,20 @@ export class PassClient {
     const weakPasswords: string[] = []
     const seen = new Map<string, string>() // hash → primer path
     const duplicates: string[] = []
+    const duplicatePaths = new Set<string>()
+    const staleEntries: string[] = []
+    const now = Date.now()
 
     for (const entry of entries) {
+      try {
+        const st = await stat(joinPath(this.storeDir, `${entry}.gpg`))
+        if (now - st.mtimeMs > this.staleAfterMs) {
+          staleEntries.push(entry)
+        }
+      } catch {
+        // sin mtime → no marcar stale
+      }
+
       let value: string
       try {
         value = await this.get(entry)
@@ -230,9 +271,28 @@ export class PassClient {
       const existing = seen.get(hash)
       if (existing) {
         duplicates.push(`${entry} (duplicado de ${existing})`)
+        duplicatePaths.add(entry)
       } else {
         seen.set(hash, entry)
       }
+    }
+
+    const rotationPlan: PassRotationItem[] = []
+    const planned = new Set<string>()
+    for (const path of weakPasswords) {
+      if (planned.has(path)) continue
+      planned.add(path)
+      rotationPlan.push({ path, reason: 'weak', action: 'regenerate' })
+    }
+    for (const path of duplicatePaths) {
+      if (planned.has(path)) continue
+      planned.add(path)
+      rotationPlan.push({ path, reason: 'duplicate', action: 'regenerate' })
+    }
+    for (const path of staleEntries) {
+      if (planned.has(path)) continue
+      planned.add(path)
+      rotationPlan.push({ path, reason: 'stale', action: 'regenerate' })
     }
 
     const recommendations: string[] = []
@@ -246,13 +306,24 @@ export class PassClient {
         `${duplicates.length} contraseñas duplicadas detectadas. Revisar y unificar entradas.`,
       )
     }
+    if (staleEntries.length > 0) {
+      recommendations.push(
+        `${staleEntries.length} entradas sin rotación reciente (mtime > ${Math.round(this.staleAfterMs / 86_400_000)}d). Incluidas en rotationPlan.`,
+      )
+    }
+    if (rotationPlan.length > 0) {
+      recommendations.push(
+        `Plan de rotación: ${rotationPlan.length} entradas. Dry-run por defecto; AGENT_DRY_RUN=false aplica regeneración.`,
+      )
+    }
 
     return {
       storeOk: true,
       totalEntries: entries.length,
       weakPasswords,
       duplicates,
-      staleEntries: [],
+      staleEntries,
+      rotationPlan,
       recommendations,
     }
   }

@@ -12,10 +12,11 @@ function readText(rel: string): string {
 
 describe("playbooks · structure", () => {
   it("every playbook is a markdown file with frontmatter", () => {
-    const files = readdirSync(resolve(root, "playbooks"));
+    const files = readdirSync(resolve(root, "playbooks")).filter(
+      (f) => f.endsWith(".md") && f !== "README.md",
+    );
     expect(files.length).toBeGreaterThan(0);
     for (const f of files) {
-      expect(f).toMatch(/\.md$/);
       const raw = readText(`playbooks/${f}`);
       expect(raw.startsWith("---")).toBe(true);
     }

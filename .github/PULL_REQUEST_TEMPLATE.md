@@ -26,21 +26,21 @@ security@alexendros.me first. See SECURITY.md.
 
 <!--
 Describe what you ran. Examples:
-  - `npm test` — all passing locally
-  - Smoke against a local Bridge with `npm run smoke`
+  - `pnpm test` — all passing locally
+  - Smoke against a local Bridge with `pnpm run smoke`
   - Manual curl against the HTTP transport on `:3000`
 -->
 
 ## Checklist
 
-- [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes.
-- [ ] `npm run build` succeeds; `dist/` was NOT committed.
+- [ ] `pnpm run typecheck` exits 0.
+- [ ] `pnpm test` passes.
+- [ ] `pnpm run build` succeeds; `dist/` was NOT committed.
 - [ ] If a new tool was added, it's documented in the README tools table and exposed via `tools/list` in `src/server.ts`.
 - [ ] If a new agent feature was added, it's documented in `docs/` and `playbooks/` and has tests.
 - [ ] If env vars changed, both `.env.example` and the README env table were updated.
 - [ ] If the threat model changed, `SECURITY.md` reflects it.
-- [ ] License compatibility checked: `npm run license-check` and `npm run license-check:prod` pass.
+- [ ] License compatibility checked: `pnpm run license-check` and `pnpm run license-check:prod` pass.
 - [ ] No references to exclusive clients (Claude, Anthropic, etc.) in README/docs.
 - [ ] No secrets, tokens, or personal email addresses in commits, comments, or fixtures.
 - [ ] Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/) (e.g. `feat(imap): add archive tool`, `fix(http): close session on auth failure`).

@@ -1,5 +1,9 @@
 # Coverage Report
 
+> **Histórico.** Snapshot del 2026-07-30. La fuente viva de cobertura es CI
+> (`pnpm run coverage`, workflow `coverage-badge.yml`). Conteos actuales de
+> tests: ver [README.md](../README.md) / [AGENTS.md](../AGENTS.md) (953+).
+
 **Generado:** 2026-07-30 — vitest + @vitest/coverage-v8 (post commits `6851bd4` housekeeping + `1414805` README sync; cierra drift con `README.md` badge y `origin/gh-pages` `coverage-badge.json`).
 
 > El gate al 95% (lines | branches | statements) instalado en `vitest.config.ts` **PASA** — todas las métricas globales cumplen con margen saludable (+0.76pp sobre branches).

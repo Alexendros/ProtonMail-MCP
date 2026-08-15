@@ -1,4 +1,4 @@
-# Mantenimiento de Proton Mail Agent
+# Mantenimiento de Proton Suite Agent
 
 Lista de personas mantenedoras y áreas de responsabilidad.
 

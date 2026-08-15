@@ -74,8 +74,11 @@ const { mockPassClientFns, mockDriveClientFns, mockDriveAuditorFns, mockBinaries
     audit: vi.fn().mockResolvedValue({
       storeOk: true, totalEntries: 5,
       weakPasswords: ['servicios/old'], duplicates: [], staleEntries: [],
+      rotationPlan: [{ path: 'servicios/old', reason: 'weak', action: 'regenerate' }],
       recommendations: ['Regenerar contrase\u00f1as d\u00e9biles'],
     }),
+    generate: vi.fn().mockResolvedValue({ path: 'servicios/old', length: 24 }),
+    getBackendBinary: vi.fn().mockReturnValue('pass'),
   },
   mockDriveClientFns: {
     stagingDir: '/tmp/staging',
@@ -134,6 +137,15 @@ vi.mock('../src/drive.js', () => ({
 vi.mock('../src/drive-audit.js', () => ({
   DriveAuditor: vi.fn().mockImplementation(() => mockDriveAuditorFns),
 }))
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>()
+  return {
+    ...actual,
+    mkdirSync: vi.fn(),
+    renameSync: vi.fn(),
+  }
+})
 
 vi.mock('../src/ecosystem/discovery.js', () => ({
   checkAllBinaries: vi.fn().mockReturnValue(mockBinaries),
@@ -257,6 +269,28 @@ describe('runAgent · pass-audit', () => {
     expect(mockLogFns.info).toHaveBeenCalledWith('pass-audit report', expect.objectContaining({ totalEntries: 5 }))
   })
 
+  it('en dry-run registra rotation plan sin regenerar', async () => {
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withPassEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: true },
+    })
+    await runAgent('pass-audit')
+    expect(mockLogFns.info).toHaveBeenCalledWith(
+      'pass-audit rotation plan (dry-run)',
+      expect.objectContaining({ items: expect.any(Array) }),
+    )
+    expect(mockPassClientFns.generate).not.toHaveBeenCalled()
+  })
+
+  it('sin dry-run regenera entradas del rotationPlan', async () => {
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withPassEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: false },
+    })
+    await runAgent('pass-audit')
+    expect(mockPassClientFns.generate).toHaveBeenCalledWith('servicios/old')
+  })
+
   it('exit(2) cuando Pass no habilitado', async () => {
     const spy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never)
     await runAgent('pass-audit')
@@ -282,6 +316,21 @@ describe('runAgent · drive goals', () => {
     await runAgent('drive-organize')
     expect(mockDriveAuditorFns.buildOrganizePlan).toHaveBeenCalled()
     expect(mockLogFns.info).toHaveBeenCalledWith('drive-organize plan (dry-run)', expect.objectContaining({ suggestions: 0 }))
+  })
+
+  it('drive-organize sin dry-run aplica moves', async () => {
+    const { mkdirSync, renameSync } = await import('node:fs')
+    mockDriveAuditorFns.buildOrganizePlan.mockReturnValue({
+      suggestions: [{ action: 'move', from: 'a.doc', to: 'docs/a.doc' }],
+    })
+    vi.mocked(loadConfig).mockReturnValue({
+      ...withDriveEnabled(),
+      agent: { ...defaultConfig.agent, dryRun: false },
+    })
+    await runAgent('drive-organize')
+    expect(mkdirSync).toHaveBeenCalled()
+    expect(renameSync).toHaveBeenCalled()
+    expect(mockLogFns.info).toHaveBeenCalledWith('drive-organize applied', { moved: 1 })
   })
 
   it('drive-list lista archivos remotos', async () => {

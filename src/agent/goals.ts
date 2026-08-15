@@ -139,7 +139,7 @@ export function describeGoal(goal: AgentGoal): string {
       'Revisa el buzón buscando alertas de seguridad sin realizar cambios.',
     alert: 'Revisa y emite alertas para correos de alto riesgo.',
     'pass-audit':
-      'Audita el vault de Proton Pass: fortaleza de contraseñas, duplicados y rotación pendiente.',
+      'Audita el vault Pass (pass|gopass): fortaleza, duplicados, stale y plan de rotación. Dry-run por defecto.',
     'suite-status':
       'Reporte unificado del estado de todos los productos configurados (Mail, Pass, Calendar, Drive).',
     'suite-manage':

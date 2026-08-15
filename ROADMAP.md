@@ -1,82 +1,120 @@
-# Roadmap de Proton Suite Agent
+# ROADMAP.md
 
-Plan a alto nivel. No son compromisos firmes; las prioridades pueden cambiar según el contexto operativo. El detalle por versión publicada vive en `CHANGELOG.md`; las decisiones de fondo en `docs/adr/`.
+Abrir cuando: Fase activa, hitos o criterio de salida.
+Aprobado: 15 de agosto de 2026
+Audiencia: Agente, Dirección
+Autoridad: Operativa
+Clase: Obligatorio
+Días para revisión: 14
+En repo: Sí
+Estado: Aprobado
+Orden: 8
+Propósito: Orden de ejecución en fases verificables.
+Reforma: Operativa
+Responsable: Alexendros
+Revisión: 29 de agosto de 2026
+Rol: Plan
+Ruta: ./ROADMAP.md
 
-## Estado actual
+<aside>
+📌
 
-`v1.2.1` — Architecture improvement: documentación, observabilidad, contract tests y CalDAV seam.
+**Propósito**
 
-## Completado
+Transforma el estado del producto en unidades de trabajo. Cada fase tiene objetivo, traza (ADR/CONSTITUTION), checklist y criterio de salida. El detalle de releases vive en `CHANGELOG.md`.
 
-### v0.6.0 — Rebrand a Proton Suite
+</aside>
 
-- [x] Rebrand completo: `@alexendros/protonsuite-agent`, binarios `protonsuite-*`, repo `agent-protonsuite`.
-- [x] Integración Proton Pass: `src/pass.ts`, tools `proton_pass_list/get/generate/health`.
-- [x] Schema de configuración multi-producto en `config.ts`.
-- [x] Inicialización condicional de clientes por producto en `index.ts`.
-- [x] Tool `proton_suite_status` unificada.
-- [x] Playbooks cross-producto (`pass-audit.md`, `suite-daily-briefing.md`).
-- [x] Stubs de Calendar y Drive con tools visibles pero no funcionales.
-- [x] Actualización de CI, conectores y Docker para el nuevo nombre.
+---
 
-### v0.7.0 — Profesionalización
+# 1. Reglas
 
-- [x] ESLint flat config (`eslint.config.mjs`) con reglas strict TypeScript, unicorn, security, import-x.
-- [x] commitlint + Husky: conventional commits forzados en pre-commit con scopes del proyecto.
-- [x] Knip: detección de dependencias, exports y archivos sin usar.
-- [x] lint-staged: ESLint solo sobre archivos staged en pre-commit.
-- [x] semantic-release: versionado automatizado desde conventional commits.
-- [x] Renovate: auto-merge para devDependencies + lockfile maintenance semanal.
-- [x] CI: paso de lint en ci.yml, paso de knip en quality.yml, semantic-release en release.yml.
-- [x] Estandarización de scripts npm (`lint`, `lint:fix`, `knip`, `prepare`).
+- Cada tarea DEBE caber en la ficha de [AGENTS.md](./AGENTS.md) § Unidad de trabajo.
+- Ninguna fase se cierra con deuda crítica de seguridad, tests o documentación viva contradictoria.
+- Calendar contra Proton permanece bloqueado (ADR-005) hasta CalDAV en Bridge.
+- Drive OAuth / API no es el path activo; el backend es `proton-drive` CLI (ADR-006).
+- Tamaño relativo: S / M / L.
 
-### v1.0.0 — Architecture improvement (docs, observabilidad, contract tests, CalDAV seam)
+---
 
-**Phase 1 — Documentación y decisiones:**
+# 2. Estado actual
 
-- [x] `AGENTS.md` (especificación agents.md para contexto de agentes IA).
-- [x] ADRs: `docs/adr/0002` (transport dual stdio/http), `0003` (ports & adapters), `0004` (config validation + dry-run guardrail), `0005` (CalDAV stub — dependencia Proton).
-- [x] Documentación de API generada: `scripts/generate-docs.mjs` → `docs/api/mcp-tools.md` (50 tools, validado por CI).
-- [x] `ARCHITECTURE.md` actualizado con referencias a ADRs.
+`v1.2.1` — Mail + Pass + Drive CLI + Calendar stub + contract tests + métricas HTTP.
 
-**Phase 2 — Observabilidad:**
+**Fase activa:** Fase 1 cerrada en checklist · siguiente candidata Fase 2 (Calendar, bloqueada).
 
-- [x] Endpoint `/metrics` (Prometheus-style) detrás de bearer auth en `src/http.ts`.
-- [x] Instrumentación de requests/sesiones MCP vía `src/utils/metrics.ts`.
-- [x] Tests de métricas (`tests/utils/metrics.test.ts`, `tests/http-transport.test.ts`).
+---
 
-**Phase 3 — Contract tests + CalDAV seam:**
+# 3. Completado (histórico condensado)
 
-- [x] Suite de contract tests (`tests/contract/`): valida la superficie MCP real vía HTTP/SSE (`buildHttpApp` + supertest), no introspección estática.
-- [x] Golden set de 50 tools (nombres, `title`, `description`, `inputSchema`, `readOnlyHint`/`openWorldHint`).
-- [x] Snapshot determinista de esquemas JSON por tool (`tool-catalog.snap`).
-- [x] CI gate: "Contract tests (MCP tool surface)" en `ci.yml`, script `test:contract`.
-- [x] `ICalendarAdapter` port en `src/clients/interfaces.ts` (interfaz solamente — CalDAV bloqueado por Proton Bridge; ver ADR-005).
+- [x] Rebrand Proton Suite (`@alexendros/protonsuite-agent`).
+- [x] Pass vía `pass` CLI; tools list/get/generate/health.
+- [x] Drive vía `proton-drive` CLI (list/upload/download/share/audit).
+- [x] Profesionalización: ESLint, commitlint, Husky, Knip, semantic-release, Renovate.
+- [x] ADRs 0002–0006; `AGENTS.md`; `docs:generate` → `docs/api/mcp-tools.md`.
+- [x] `/metrics`, contract tests (50 tools), ports en `src/clients/interfaces.ts`.
+- [x] Split `src/server.ts` → `src/server/{mail,pass,drive,calendar,bridge,ecosystem,agent,suite}.ts`.
+- [x] Alert sinks: file + webhook + ntfy (`src/alerts/`).
+- [x] Auto-labeler CI (`.github/workflows/labeler.yml`).
 
-**Infraestructura (corte transversal):**
+---
 
-- [x] Capa de ports hexagonal: `IImapClient`, `ISmtpClient`, `IDriveClient`, `IPassClient`, `ICalendarAdapter` en `src/clients/interfaces.ts`.
-- [x] Pre-commit local: `.husky/pre-commit` → `lint-staged` (eslint --fix src) + typecheck + test suite (934 tests, 98% cobertura).
-- [x] Refactor en progreso: `src/server.ts` → `src/server/{bridge,mail,pass,drive,suite,ecosystem,agent}.ts` (extractores por dominio).
+# 4. Subfase 0 — Canon documental y limpieza
 
-## Pendiente · prioridad alta
+**Objetivo:** docs alineados con el código; sin links rotos ni marca antigua.
 
-- [ ] **Calendar MVP:** cliente CalDAV real cuando Bridge lo exponga, tools `proton_calendar_list_events/create_event`. (Interfaz `ICalendarAdapter` lista en `src/clients/interfaces.ts`; ver ADR-005.)
-- [ ] **Drive MVP:** integración OAuth, tools `proton_drive_list_files/upload/download/share`.
-- [ ] **Pass CLI backend alternativo:** soporte para `gopass` como drop-in con `GOPASS_STORE_DIR`.
-- [ ] **Agente multi-pass:** goal `pass-audit` con reporte de fortaleza y rotación programada.
-- [ ] **Docker compose multi-producto:** servicio de `gopass` o `pass` en el compose para Pass.
+**Traza:** [CONSTITUTION.md](./CONSTITUTION.md); estilo de gobernanza adaptado de nuevowebsite-alexendrosdev.
 
-## Pendiente · prioridad media
+**Tamaño:** M
 
-- [ ] Auto-labeler CI: etiquetar PRs automáticamente según los archivos modificados.
-- [ ] Coverage badge en README (vitest coverage → shields.io).
-- [ ] Webhook de alertas: integración con ntfy, Discord o Slack desde `AlertSystem`.
-- [ ] Documentación de playbooks con ejemplos de prompts para Claude/OpenCode.
+**Checklist:**
 
-## Pendiente · backlog
+- [x] `CONSTITUTION.md` + README pulso/enrutado + ROADMAP fichado.
+- [x] `AGENTS` / `ARCHITECTURE` / `SECURITY` / `CONTRIBUTING` actualizados.
+- [x] `docs/README` real; archive `docs/superpowers` superseded.
+- [x] Rebrand “Proton Mail Agent” → Suite; `npm` → `pnpm` en docs vivos.
+- [x] ADRs 0001/0003/0006 normalizados; playbooks índice + prompts.
 
-- [ ] Monorepo: separar `@alexendros/protonsuite-core` + `agent` + `mcp-server` si el proyecto crece.
-- [ ] TypeScript project references + Turborepo si se migra a monorepo.
-- [ ] Plugin system para backends de Pass (además de pass/gopass: Bitwarden CLI, 1Password CLI).
-- [ ] Dashboard web opcional para monitorización de alertas y estado de la suite.
+**Criterio de salida:** README sin rutas fantasma; ningún doc vivo afirma “Drive stub/OAuth pendiente”; conteos tools/tests coherentes; `pnpm docs:check` OK.
+
+---
+
+# 5. Fase 1 — Pass, agente y hardening DX
+
+**Depende de:** Subfase 0.
+
+**Objetivo:** backend `gopass`, audit con plan de rotación (dry-run), Pass en compose, DX residual.
+
+**Traza:** CONSTITUTION §§4–5; ADR-003; ADR-004.
+
+**Tamaño:** M
+
+**Tareas:**
+
+- [x] Backend `gopass` drop-in (`PROTON_PASS_BACKEND` / `GOPASS_STORE_DIR`) + tests.
+- [x] `pass-audit`: reporte + `rotationPlan`; dry-run por defecto; regeneración solo con `AGENT_DRY_RUN=false`.
+- [x] Docker Compose: volúmenes Pass/gpg documentados y listos.
+- [x] Coverage badge en README; alerting.md documenta webhook/ntfy (env `ALERT_NTFY_*`).
+
+**Exclusiones:** CalDAV Proton; OAuth Drive; monorepo; dashboard web.
+
+**Criterio de salida:** `pass-audit` usable en dry-run con plan de rotación; gopass cubierto por tests; deploy docs al día; checklist Fase 1 firmada.
+
+---
+
+# 6. Fase 2 — Calendar MVP (bloqueada)
+
+**Depende de:** CalDAV expuesto por Proton Bridge (ADR-005).
+
+**Objetivo:** implementar `ICalendarAdapter` real y tools `proton_calendar_*`.
+
+**Hasta entonces:** stub + `{available:false}`.
+
+---
+
+# 7. Backlog
+
+- Plugin system Pass (Bitwarden / 1Password CLI) además de pass/gopass.
+- Monorepo / Turborepo si el proyecto crece.
+- Dashboard web opcional de alertas.
+- Fallback Drive rclone cuando el remote `protondrive` esté estable (ADR-006).

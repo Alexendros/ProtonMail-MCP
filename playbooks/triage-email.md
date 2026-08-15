@@ -1,6 +1,6 @@
 ---
 name: triage-email
-description: Revisa y tria el INBOX de Proton Mail vía Proton Mail Agent. Clasifica correos, resume los relevantes y aparta la basura comercial. SIEMPRE dry-run antes de mover. No usa proton_delete_email.
+description: Revisa y tria el INBOX de Proton Mail vía Proton Suite Agent. Clasifica correos, resume los relevantes y aparta la basura comercial. SIEMPRE dry-run antes de mover. No usa proton_delete_email.
 ---
 
 # Triaje de correo

@@ -48,9 +48,10 @@ const hoisted = vi.hoisted(() => {
   })
 
   const mockReaddir = vi.fn()
+  const mockStat = vi.fn().mockResolvedValue({ mtimeMs: Date.now() })
   const silentLog = { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 
-  return { mockExecFile, mockReaddir, silentLog, captured }
+  return { mockExecFile, mockReaddir, mockStat, silentLog, captured }
 })
 
 vi.mock('node:child_process', () => ({
@@ -59,11 +60,13 @@ vi.mock('node:child_process', () => ({
 
 vi.mock('node:fs/promises', () => ({
   readdir: hoisted.mockReaddir,
+  stat: hoisted.mockStat,
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
   hoisted.captured.length = 0
+  hoisted.mockStat.mockResolvedValue({ mtimeMs: Date.now() })
 })
 
 function makeClient(storeDir = '/tmp/password-store') {
@@ -201,6 +204,11 @@ describe('PassClient', () => {
       makeClient().remove('old/entry').catch(() => {})
       expect(hoisted.mockExecFile).toHaveBeenCalledWith('pass', ['rm', '-f', 'old/entry'], expect.any(Object))
     })
+    it('llama execFile con gopass cuando backend=gopass', () => {
+      const c = new PassClient({ storeDir: '/tmp/s', backend: 'gopass' }, hoisted.silentLog)
+      c.remove('old/entry').catch(() => {})
+      expect(hoisted.mockExecFile).toHaveBeenCalledWith('gopass', ['rm', '-f', 'old/entry'], expect.any(Object))
+    })
   })
 
   describe('move', () => {
@@ -278,6 +286,38 @@ describe('PassClient', () => {
       expect(result.totalEntries).toBe(3)
       expect(result.weakPasswords).toContain('weak')
       expect(result.duplicates.length).toBeGreaterThanOrEqual(1)
+      expect(result.rotationPlan.some((i) => i.path === 'weak' && i.reason === 'weak')).toBe(true)
+      expect(result.rotationPlan.some((i) => i.path === 'dup')).toBe(true)
+    })
+
+    it('marca stale por mtime antiguo y usa backend gopass', async () => {
+      hoisted.mockReaddir.mockResolvedValue(['old.gpg'])
+      hoisted.mockStat.mockResolvedValue({ mtimeMs: Date.now() - 400 * 86_400_000 })
+      const c = new PassClient(
+        { storeDir: '/tmp/password-store', backend: 'gopass', staleAfterMs: 365 * 86_400_000 },
+        hoisted.silentLog,
+      )
+      expect(c.getBackendBinary()).toBe('gopass')
+      const promise = c.audit()
+      for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 0))
+      hoisted.captured[0].emitData('StrongP@ss1234!\n')
+      hoisted.captured[0].emitClose(0)
+      const result = await promise
+      expect(result.staleEntries).toContain('old')
+      expect(result.rotationPlan.some((i) => i.path === 'old' && i.reason === 'stale')).toBe(true)
+    })
+
+    it('ignora stale cuando stat falla', async () => {
+      hoisted.mockReaddir.mockResolvedValue(['x.gpg'])
+      hoisted.mockStat.mockRejectedValue(new Error('ENOENT'))
+      const c = makeClient()
+      const promise = c.audit()
+      for (let i = 0; i < 10; i++) await new Promise((r) => setTimeout(r, 0))
+      hoisted.captured[0].emitData('StrongP@ss1234!\n')
+      hoisted.captured[0].emitClose(0)
+      const result = await promise
+      expect(result.staleEntries).toEqual([])
+      expect(result.storeOk).toBe(true)
     })
   })
 

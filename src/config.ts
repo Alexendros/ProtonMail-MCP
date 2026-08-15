@@ -141,7 +141,10 @@ export async function resolveBridgeConfig(
       error: log.error ?? log.info,
     }
     const passClient = new PassClient(
-      { storeDir: cfg.products.pass.storeDir },
+      {
+        storeDir: cfg.products.pass.storeDir,
+        backend: cfg.products.pass.backend ?? 'pass',
+      },
       passLog,
     )
     const passPath = bridge.passPath
@@ -208,12 +211,24 @@ function parseLogLevel(env: NodeJS.ProcessEnv) {
 }
 
 function parseAlertConfig(env: NodeJS.ProcessEnv) {
+  const ntfyTopic = env['ALERT_NTFY_TOPIC']?.trim()
+  const ntfyUrl = env['ALERT_NTFY_URL']?.trim() || 'https://ntfy.sh'
+  const ntfyToken = env['ALERT_NTFY_TOKEN']?.trim()
   return {
     webhookUrl: env['ALERT_WEBHOOK_URL'] || undefined,
     minSeverity: (env['ALERT_MIN_SEVERITY'] ??
       'warning') as Config['alerts']['minSeverity'],
     logDir: env['ALERT_LOG_DIR'] ?? 'logs',
     enabled: readBool(env['ALERTS_ENABLED'], true),
+    ...(ntfyTopic
+      ? {
+          ntfy: {
+            url: ntfyUrl,
+            topic: ntfyTopic,
+            ...(ntfyToken ? { token: ntfyToken } : {}),
+          },
+        }
+      : {}),
   }
 }
 
